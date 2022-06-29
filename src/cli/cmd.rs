@@ -3,6 +3,7 @@ pub enum CmdExitCode {
     ERR,
 }
 
-pub fn cmd_run(_cmd: &String) -> CmdExitCode {
+pub fn cmd_run(cmd: &String) -> CmdExitCode {
+    println!("Execute command {}", cmd);
     CmdExitCode::SUCC
 }

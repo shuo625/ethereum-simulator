@@ -1,12 +1,13 @@
 mod cmd;
 
-use std::io;
+use std::io::{self, Write};
 
 use cmd::CmdExitCode;
 
 pub fn cli_run() {
     loop {
         print!(">");
+        io::stdout().flush().expect("flush failed");
 
         let mut cmd = String::new();
 
@@ -19,7 +20,7 @@ pub fn cli_run() {
         match cmd_exit_code {
             CmdExitCode::SUCC => {}
             CmdExitCode::ERR => {
-                println!("Wrong command");
+                println!("wrong command");
             }
         }
     }
