@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 ethsign = "0.8.0"
+sha256 = "1.0.3"
