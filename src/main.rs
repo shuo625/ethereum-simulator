@@ -1,3 +1,5 @@
+use ethereum_simulator::cli_run;
+
 fn main() {
-    println!("Hello, world!");
+    cli_run();
 }
