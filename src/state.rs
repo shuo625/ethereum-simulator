@@ -17,22 +17,20 @@ impl State {
         }
     }
 
-    pub fn account_add(&mut self, name: String) {
-        let name_copy = name.clone();
-        self.accounts.insert(name, EoA::new(name_copy));
+    pub fn account_add(&mut self, name: &str) {
+        self.accounts
+            .insert(name.to_string(), EoA::new(name.to_string()));
     }
 
-    pub fn account_list(&self) -> String {
-        let mut rst = String::new();
-        for key in self.accounts.keys() {
-            rst.push_str(key)
+    pub fn account_list(&self) -> Vec<&String> {
+        self.accounts.keys().collect()
+    }
+
+    pub fn account_get_balance(&self, name: &str) -> Option<u64> {
+        match self.accounts.get(name) {
+            Some(account) => Some(account.get_balance()),
+            None => None,
         }
-
-        rst
-    }
-
-    pub fn account_get_balance(&self, name: &String) -> u64 {
-        self.accounts.get(name).unwrap().get_balance()
     }
 
     pub fn tx_send(&mut self, args: String) {
