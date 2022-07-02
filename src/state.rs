@@ -33,7 +33,7 @@ impl State {
         }
     }
 
-    pub fn tx_send(&mut self, args: String) {
+    pub fn tx_send(&mut self, args: &str) {
         todo!()
     }
 }
