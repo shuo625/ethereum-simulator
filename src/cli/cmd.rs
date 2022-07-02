@@ -1,9 +1,5 @@
+use super::cmd_errors::{CmdAccountErrCode, CmdErrCode};
 use crate::state::State;
-
-pub enum CmdExitCode {
-    SUCC,
-    ERR,
-}
 
 const USAGE: &'static str = r#"
 Usage:
@@ -16,78 +12,87 @@ account list
 tx send --from <name> --to <name> -v <value>
 "#;
 
+pub fn cmd_exec(cmd_str: &str, state: &mut State) {
+    match cmd_run(cmd_str, state) {
+        Err(err) => match err {
+            CmdErrCode::INVALIDCMD => println!("invalid command"),
+            CmdErrCode::CMDACCOUNTERR(account_err) => match account_err {
+                CmdAccountErrCode::NOTEXISTEDACCOUNT => println!("account not existed"),
+            },
+        },
+        Ok(()) => {}
+    }
+}
+
 /// cmd will be the format of cmd subcmd args
-pub fn cmd_run(cmd_str: String, state: &mut State) -> CmdExitCode {
-    let (cmd, subcmd_str) = match cmd_str.split_once(' ') {
-        Some((a, b)) => (a, b),
-        None => return CmdExitCode::ERR,
-    };
+pub fn cmd_run(cmd_str: &str, state: &mut State) -> Result<(), CmdErrCode> {
+    let cmd_str_trim = cmd_str.trim();
+    let (cmd, subcmd_str) = cmd_str_trim.split_once(' ').unwrap_or((cmd_str_trim, ""));
 
     match cmd {
         "help" => cmd_help(),
-        "account" => cmd_account(subcmd_str.to_string(), state),
-        "tx" => cmd_tx(subcmd_str.to_string(), state),
-        _ => CmdExitCode::ERR,
+        "account" => cmd_account(subcmd_str, state),
+        "tx" => cmd_tx(subcmd_str, state),
+        _ => Err(CmdErrCode::INVALIDCMD),
     }
 }
 
-fn cmd_help() -> CmdExitCode {
-    println!("{}", USAGE);
+fn cmd_help() -> Result<(), CmdErrCode> {
+    println!("{USAGE}");
 
-    CmdExitCode::SUCC
+    Ok(())
 }
 
-fn cmd_account(cmd_str: String, state: &mut State) -> CmdExitCode {
-    let (cmd, args) = match cmd_str.split_once(' ') {
-        Some((a, b)) => (a, b),
-        None => return CmdExitCode::ERR,
-    };
+fn cmd_account(subcmd_str: &str, state: &mut State) -> Result<(), CmdErrCode> {
+    let (subcmd, args) = subcmd_str.split_once(' ').unwrap_or((subcmd_str, ""));
 
-    match cmd {
-        "add" => cmd_account_add(args.to_string(), state),
-        "list" => cmd_account_list(args.to_string(), state),
-        "show" => cmd_account_show(args.to_string(), state),
-        _ => CmdExitCode::ERR,
+    match subcmd {
+        "add" => cmd_account_add(args, state),
+        "list" => cmd_account_list(state),
+        "show" => cmd_account_show(args, state),
+        _ => Err(CmdErrCode::INVALIDCMD),
     }
 }
 
-fn cmd_account_add(args: String, state: &mut State) -> CmdExitCode {
+fn cmd_account_add(args: &str, state: &mut State) -> Result<(), CmdErrCode> {
     state.account_add(args);
 
-    CmdExitCode::SUCC
+    Ok(())
 }
 
-fn cmd_account_list(_args: String, state: &mut State) -> CmdExitCode {
-    println!("accounts: {}", state.account_list());
+fn cmd_account_list(state: &mut State) -> Result<(), CmdErrCode> {
+    println!("{:?}", state.account_list());
 
-    CmdExitCode::SUCC
+    Ok(())
 }
 
-fn cmd_account_show(args: String, state: &mut State) -> CmdExitCode {
-    let name = args;
-    println!(
-        "account: {}, balance: {}",
-        name.trim_end(),
-        state.account_get_balance(&name)
-    );
-
-    CmdExitCode::SUCC
-}
-
-fn cmd_tx(cmd_str: String, state: &mut State) -> CmdExitCode {
-    let (cmd, args) = match cmd_str.split_once(' ') {
-        Some((a, b)) => (a, b),
-        None => return CmdExitCode::ERR,
+fn cmd_account_show(args: &str, state: &mut State) -> Result<(), CmdErrCode> {
+    let name = args.trim_end();
+    let balance = match state.account_get_balance(name) {
+        Some(balance) => balance,
+        None => {
+            return Err(CmdErrCode::CMDACCOUNTERR(
+                CmdAccountErrCode::NOTEXISTEDACCOUNT,
+            ))
+        }
     };
 
-    match cmd {
-        "send" => cmd_tx_send(args.to_string(), state),
-        _ => CmdExitCode::ERR,
+    println!("account: {}, balance: {}", name, balance);
+
+    Ok(())
+}
+
+fn cmd_tx(subcmd_str: &str, state: &mut State) -> Result<(), CmdErrCode> {
+    let (subcmd, args) = subcmd_str.split_once(' ').unwrap_or((subcmd_str, ""));
+
+    match subcmd {
+        "send" => cmd_tx_send(args, state),
+        _ => Err(CmdErrCode::INVALIDCMD),
     }
 }
 
-fn cmd_tx_send(args: String, state: &mut State) -> CmdExitCode {
+fn cmd_tx_send(args: &str, state: &mut State) -> Result<(), CmdErrCode> {
     state.tx_send(args);
 
-    CmdExitCode::SUCC
+    Ok(())
 }
