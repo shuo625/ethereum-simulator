@@ -1,4 +1,4 @@
-use super::cmd_errors::{CmdAccountErrCode, CmdErrCode};
+use super::cmd_errors::{CmdAccountErrCode, CmdErrCode, CmdTxErrCode};
 use crate::state::State;
 
 const USAGE: &'static str = r#"
@@ -18,6 +18,11 @@ pub fn cmd_exec(cmd_str: &str, state: &mut State) {
             CmdErrCode::INVALIDCMD => println!("invalid command"),
             CmdErrCode::CMDACCOUNTERR(account_err) => match account_err {
                 CmdAccountErrCode::NOTEXISTEDACCOUNT => println!("account not existed"),
+            },
+            CmdErrCode::CMDTXERR(tx_err) => match tx_err {
+                CmdTxErrCode::NOTEXISTEDFROM => println!("from account not existed"),
+                CmdTxErrCode::NOTEXISTEDTO => println!("to account not existed"),
+                CmdTxErrCode::NOTENOUGHBALANCE => println!("balance of from account not enough"),
             },
         },
         Ok(()) => {}
@@ -92,7 +97,14 @@ fn cmd_tx(subcmd_str: &str, state: &mut State) -> Result<(), CmdErrCode> {
 }
 
 fn cmd_tx_send(args: &str, state: &mut State) -> Result<(), CmdErrCode> {
-    state.tx_send(args);
+    let arguments: Vec<&str> = args.split_whitespace().collect();
+    let (from, to, value) = (
+        arguments[1],
+        arguments[3],
+        arguments[5].parse::<u64>().unwrap(),
+    );
 
-    Ok(())
+    state
+        .tx_send(from, to, value)
+        .or_else(|err| Err(CmdErrCode::CMDTXERR(err)))
 }
