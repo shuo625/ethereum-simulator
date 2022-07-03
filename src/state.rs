@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{account::EoA, block::Block, tx::Tx};
+use crate::{account::EoA, block::Block, cli::cmd_errors::CmdTxErrCode, tx::Tx};
 
 pub struct State {
     accounts: HashMap<String, EoA>,
@@ -33,7 +33,52 @@ impl State {
         }
     }
 
-    pub fn tx_send(&mut self, args: &str) {
-        todo!()
+    pub fn tx_send(&mut self, from: &str, to: &str, value: u64) -> Result<(), CmdTxErrCode> {
+        self.txs
+            .push(Tx::new(from.to_string(), to.to_string(), value));
+        self.mine()
+    }
+
+    fn mine(&mut self) -> Result<(), CmdTxErrCode> {
+        let last_tx = self.txs.last().unwrap();
+
+        if let Some(from_account) = self.accounts.get_mut(last_tx.from()) {
+            // if from exists
+            match from_account.sub_balance(last_tx.value()) {
+                Ok(_) => {
+                    // balance of from is enough
+                    if let Some(to_account) = self.accounts.get_mut(last_tx.to()) {
+                        // if to exists
+                        to_account.add_balance(last_tx.value());
+                        // mine tx
+                        if self.blocks.is_empty() {
+                            self.blocks.push(Block::new(
+                                last_tx.clone(),
+                                String::from("0000000000000000000000000000000000000000000000000000000000000000"),
+                            ));
+                        } else {
+                            self.blocks.push(Block::new(
+                                last_tx.clone(),
+                                self.blocks.last().unwrap().hash(),
+                            ))
+                        }
+                        Ok(())
+                    } else {
+                        // to does not exist
+                        self.txs.pop();
+                        Err(CmdTxErrCode::NOTEXISTEDTO)
+                    }
+                }
+                err => {
+                    // balance of from is not enough
+                    self.txs.pop();
+                    err
+                }
+            }
+        } else {
+            // from does not exist
+            self.txs.pop();
+            Err(CmdTxErrCode::NOTEXISTEDFROM)
+        }
     }
 }
