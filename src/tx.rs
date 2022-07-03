@@ -2,6 +2,7 @@ use sha256;
 
 // use crate::eth_types::Address;
 
+#[derive(Clone)]
 pub struct Tx {
     from: String,
     to: String,
