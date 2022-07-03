@@ -1,5 +1,5 @@
 mod cmd;
-pub(self) mod cmd_errors;
+pub mod cmd_errors;
 
 use std::io::{self, Write};
 
