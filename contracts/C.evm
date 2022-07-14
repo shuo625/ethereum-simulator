@@ -1,0 +1,143 @@
+    /* "example.sol":69:158  contract C {... */
+  mstore(0x40, 0x80)
+  callvalue
+  dup1
+  iszero
+  tag_1
+  jumpi
+  0x00
+  dup1
+  revert
+tag_1:
+  pop
+  dataSize(sub_0)
+  dup1
+  dataOffset(sub_0)
+  0x00
+  codecopy
+  0x00
+  return
+stop
+
+sub_0: assembly {
+        /* "example.sol":69:158  contract C {... */
+      mstore(0x40, 0x80)
+      callvalue
+      dup1
+      iszero
+      tag_1
+      jumpi
+      0x00
+      dup1
+      revert
+    tag_1:
+      pop
+      jumpi(tag_2, lt(calldatasize, 0x04))
+      shr(0xe0, calldataload(0x00))
+      dup1
+      0x901717d1
+      eq
+      tag_3
+      jumpi
+    tag_2:
+      0x00
+      dup1
+      revert
+        /* "example.sol":86:156  function one() public pure returns (uint256) {... */
+    tag_3:
+      tag_4
+      tag_5
+      jump	// in
+    tag_4:
+      mload(0x40)
+      tag_6
+      swap2
+      swap1
+      tag_7
+      jump	// in
+    tag_6:
+      mload(0x40)
+      dup1
+      swap2
+      sub
+      swap1
+      return
+    tag_5:
+        /* "example.sol":122:129  uint256 */
+      0x00
+        /* "example.sol":148:149  1 */
+      0x01
+        /* "example.sol":141:149  return 1 */
+      swap1
+      pop
+        /* "example.sol":86:156  function one() public pure returns (uint256) {... */
+      swap1
+      jump	// out
+        /* "#utility.yul":7:84   */
+    tag_9:
+        /* "#utility.yul":44:51   */
+      0x00
+        /* "#utility.yul":73:78   */
+      dup2
+        /* "#utility.yul":62:78   */
+      swap1
+      pop
+        /* "#utility.yul":7:84   */
+      swap2
+      swap1
+      pop
+      jump	// out
+        /* "#utility.yul":90:208   */
+    tag_10:
+        /* "#utility.yul":177:201   */
+      tag_14
+        /* "#utility.yul":195:200   */
+      dup2
+        /* "#utility.yul":177:201   */
+      tag_9
+      jump	// in
+    tag_14:
+        /* "#utility.yul":172:175   */
+      dup3
+        /* "#utility.yul":165:202   */
+      mstore
+        /* "#utility.yul":90:208   */
+      pop
+      pop
+      jump	// out
+        /* "#utility.yul":214:436   */
+    tag_7:
+        /* "#utility.yul":307:311   */
+      0x00
+        /* "#utility.yul":345:347   */
+      0x20
+        /* "#utility.yul":334:343   */
+      dup3
+        /* "#utility.yul":330:348   */
+      add
+        /* "#utility.yul":322:348   */
+      swap1
+      pop
+        /* "#utility.yul":358:429   */
+      tag_16
+        /* "#utility.yul":426:427   */
+      0x00
+        /* "#utility.yul":415:424   */
+      dup4
+        /* "#utility.yul":411:428   */
+      add
+        /* "#utility.yul":402:408   */
+      dup5
+        /* "#utility.yul":358:429   */
+      tag_10
+      jump	// in
+    tag_16:
+        /* "#utility.yul":214:436   */
+      swap3
+      swap2
+      pop
+      pop
+      jump	// out
+
+    auxdata: 0xa26469706673582212208237f441dea9dad1ed0b8161380ea48ff7cab71e3524abc1f52cf551d5e220e764736f6c634300080f0033
+}
