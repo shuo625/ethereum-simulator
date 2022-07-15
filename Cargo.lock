@@ -151,6 +151,7 @@ name = "ethereum-simulator"
 version = "0.1.0"
 dependencies = [
  "ethsign",
+ "fixed-hash",
  "sha256",
  "uint",
 ]
@@ -167,6 +168,18 @@ dependencies = [
  "secp256k1",
  "serde",
  "zeroize",
+]
+
+[[package]]
+name = "fixed-hash"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cfcf0ed7fe52a17a03854ec54a9f76d6d84508d1c0e66bc1793301c73fc8493c"
+dependencies = [
+ "byteorder",
+ "rand 0.8.5",
+ "rustc-hex",
+ "static_assertions",
 ]
 
 [[package]]
