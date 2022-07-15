@@ -1,23 +1,30 @@
-// use crate::eth_types::{Address, PrivateKey};
-use crate::cli::cmd_errors::CmdTxErrCode;
+use crate::{
+    cli::cmd_errors::CmdTxErrCode,
+    eth_types::{Bytes, H256},
+    hash::keccak,
+};
 
-pub struct EoA {
+pub struct Account {
     name: String,
     private_key: String,
     address: String,
     balance: u64,
+    code_hash: H256,
+    code: Bytes,
 }
 
-impl EoA {
-    pub fn new(name: String) -> Self {
+impl Account {
+    pub fn new(name: String, code: Bytes) -> Self {
         //let private_key = PrivateKey::from_raw(&[22]).expect("create private key failed");
         //let address = private_key.public();
 
-        EoA {
+        Account {
             name,
             private_key: String::new(),
             address: String::new(),
             balance: 100,
+            code_hash: keccak(&code),
+            code,
         }
     }
 
