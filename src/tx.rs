@@ -7,11 +7,17 @@ pub struct Tx {
     from: String,
     to: String,
     value: u64,
+    data: String,
 }
 
 impl Tx {
-    pub fn new(from: String, to: String, value: u64) -> Self {
-        Tx { from, to, value }
+    pub fn new(from: String, to: String, value: u64, data: String) -> Self {
+        Tx {
+            from,
+            to,
+            value,
+            data,
+        }
     }
 
     pub fn from(&self) -> &str {
