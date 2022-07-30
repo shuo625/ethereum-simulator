@@ -34,6 +34,8 @@ pub enum Instruction {
     CALLDATALOAD,
     CALLDATASIZE,
     CALLDATACOPY,
+    CODESIZE,
+    CODECOPY,
     GASPRICE,
     EXTCODESIZE,
     EXTCODECOPY,
