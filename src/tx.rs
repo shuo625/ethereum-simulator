@@ -32,6 +32,10 @@ impl Tx {
         self.value
     }
 
+    pub fn data(&self) -> &str {
+        &self.data
+    }
+
     pub fn hash(&self) -> String {
         sha256::digest(format!(
             "{}{}{}",

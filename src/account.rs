@@ -1,25 +1,32 @@
-use crate::{
-    cli::cmd_errors::CmdTxErrCode,
-    eth_types::{Bytes, H256},
-    hash::keccak,
-};
+use crate::{cli::cmd_errors::CmdTxErrCode, eth_types::H256, hash::keccak};
+
+pub enum AccountType {
+    EoA,
+    Contract,
+}
 
 pub struct Account {
     name: String,
+    account_type: AccountType,
     private_key: String,
     address: String,
     balance: u64,
     code_hash: H256,
-    code: Bytes,
+    code: String,
 }
 
 impl Account {
-    pub fn new(name: String, code: Bytes) -> Self {
+    pub fn new(name: String, code: String) -> Self {
         //let private_key = PrivateKey::from_raw(&[22]).expect("create private key failed");
         //let address = private_key.public();
 
         Account {
             name,
+            account_type: if code == "" {
+                AccountType::EoA
+            } else {
+                AccountType::Contract
+            },
             private_key: String::new(),
             address: String::new(),
             balance: 100,

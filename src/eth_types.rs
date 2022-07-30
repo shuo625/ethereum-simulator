@@ -3,7 +3,6 @@ use uint::construct_uint;
 
 pub type Address = ethsign::PublicKey;
 pub type PrivateKey = ethsign::SecretKey;
-pub type Bytes = Vec<u8>;
 
 construct_uint! {
     pub struct U256(4);
