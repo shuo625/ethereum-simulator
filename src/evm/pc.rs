@@ -25,12 +25,8 @@ impl PC {
             pc: 0,
         }
     }
-}
 
-impl Iterator for PC {
-    type Item = Instruction;
-
-    fn next(&mut self) -> Option<Self::Item> {
+    pub fn next(&mut self) -> Option<Instruction> {
         if self.pc >= self.code.len() {
             return None;
         }
