@@ -11,8 +11,8 @@ impl PC {
         PC {
             code: {
                 let bytes_origin = code.as_bytes();
-                let bytes: Vec<u8> = Vec::new();
-                let i = 0;
+                let mut bytes: Vec<u8> = Vec::new();
+                let mut i = 0;
                 while i < bytes_origin.len() - 1 {
                     bytes.push(num_op::u8s_to_u8(
                         bytes_origin[i] - b'0',
