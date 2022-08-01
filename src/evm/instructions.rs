@@ -70,11 +70,7 @@ pub enum Instruction {
     PUSH16(u128),
     DUP(usize),
     SWAP(usize),
-    LOG0,
-    LOG1,
-    LOG2,
-    LOG3,
-    LOG4,
+    LOG(usize),
     CREAT,
     CALL,
     CALLCODE,
@@ -84,4 +80,5 @@ pub enum Instruction {
     STATICCALL,
     REVERT,
     SELFDESTRUCT,
+    INVALID,
 }

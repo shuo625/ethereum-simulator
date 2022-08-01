@@ -31,6 +31,9 @@ impl Iterator for PC {
     type Item = Instruction;
 
     fn next(&mut self) -> Option<Self::Item> {
+        if self.pc >= self.code.len() {
+            return None;
+        }
         let instruction = match self.code[self.pc] {
             0x00 => Some(Instruction::STOP),
             0x01 => Some(Instruction::ADD),
@@ -133,7 +136,7 @@ impl Iterator for PC {
             0xfa => Some(Instruction::STATICCALL),
             0xfd => Some(Instruction::REVERT),
             0xff => Some(Instruction::SELFDESTRUCT),
-            _ => None,
+            _ => Some(Instruction::INVALID),
         };
 
         self.pc += 1;
