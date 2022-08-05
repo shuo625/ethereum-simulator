@@ -1,3 +1,6 @@
+mod storage;
+
+use self::storage::Storage;
 use crate::{cli::cmd_errors::CmdTxErrCode, eth_types::H256, hash::keccak};
 
 pub enum AccountType {
@@ -13,6 +16,7 @@ pub struct Account {
     balance: u64,
     code_hash: H256,
     code: String,
+    storage: Storage,
 }
 
 impl Account {
@@ -32,6 +36,7 @@ impl Account {
             balance: 100,
             code_hash: keccak(&code),
             code,
+            storage: Storage::new(),
         }
     }
 
