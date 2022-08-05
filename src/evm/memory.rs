@@ -34,4 +34,10 @@ impl Memory {
         let off = offset.low_u64() as usize;
         self.memory[off..off + value.len()].copy_from_slice(value);
     }
+
+    pub fn write_byte(&mut self, offset: U256, value: U256) {
+        let off = offset.low_u64() as usize;
+        let val = value.low_u64() as u8;
+        self.memory[off] = val;
+    }
 }
