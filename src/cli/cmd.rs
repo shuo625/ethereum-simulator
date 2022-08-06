@@ -9,7 +9,7 @@ help show help info
 account add <name>
 account list
 
-tx send --from <name> --to <name> -v <value>
+tx send --params <file>
 "#;
 
 pub fn cmd_exec(cmd_str: &str, state: &mut State) {
@@ -98,13 +98,9 @@ fn cmd_tx(subcmd_str: &str, state: &mut State) -> Result<(), CmdErrCode> {
 
 fn cmd_tx_send(args: &str, state: &mut State) -> Result<(), CmdErrCode> {
     let arguments: Vec<&str> = args.split_whitespace().collect();
-    let (from, to, value) = (
-        arguments[1],
-        arguments[3],
-        arguments[5].parse::<u64>().unwrap(),
-    );
+    let params_file = arguments[1];
 
     state
-        .tx_send(from, to, value)
+        .tx_send(params_file)
         .or_else(|err| Err(CmdErrCode::CMDTXERR(err)))
 }
