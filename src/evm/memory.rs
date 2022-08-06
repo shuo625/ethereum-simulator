@@ -9,8 +9,8 @@ impl Memory {
         Memory { memory: Vec::new() }
     }
 
-    pub fn size(&self) -> usize {
-        self.memory.len()
+    pub fn size(&self) -> U256 {
+        U256::from(self.memory.len())
     }
 
     pub fn read(&self, offset: U256) -> U256 {

@@ -9,8 +9,8 @@ impl Stack {
         Stack { stack: Vec::new() }
     }
 
-    pub fn size(&self) -> usize {
-        self.stack.len()
+    pub fn size(&self) -> U256 {
+        U256::from(self.stack.len())
     }
 
     pub fn push(&mut self, v: U256) {
