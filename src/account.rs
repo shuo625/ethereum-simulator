@@ -1,6 +1,6 @@
 mod storage;
 
-use self::storage::Storage;
+pub use self::storage::Storage;
 use crate::{cli::cmd_errors::CmdTxErrCode, eth_types::H256, hash::keccak};
 
 pub enum AccountType {
