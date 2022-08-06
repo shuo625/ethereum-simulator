@@ -1,5 +1,5 @@
 use super::instructions::Instruction;
-use crate::eth_types::num_op;
+use crate::eth_types::{num_op, U256};
 
 pub struct PC {
     code: Vec<u8>,
@@ -24,6 +24,15 @@ impl PC {
             },
             pc: 0,
         }
+    }
+
+    pub fn jump(&mut self, destination: U256) {
+        let dest = destination.as_usize();
+        self.pc = dest;
+    }
+
+    pub fn pc(&self) -> U256 {
+        U256::from(self.pc)
     }
 
     pub fn next(&mut self) -> Option<Instruction> {
