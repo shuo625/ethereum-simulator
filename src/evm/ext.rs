@@ -1,4 +1,8 @@
-use crate::{account::Storage, eth_types::H256, tx::Tx};
+use crate::{
+    account::Storage,
+    eth_types::{H256, U256},
+    tx::Tx,
+};
 
 pub struct Ext<'a> {
     storage: &'a mut Storage,
@@ -23,5 +27,13 @@ impl<'a> Ext<'a> {
 
     pub fn get_storage(&self, key: &H256) -> H256 {
         self.storage.get(key)
+    }
+
+    pub fn get_gas(&self) -> U256 {
+        U256::from(self.gas)
+    }
+
+    pub fn get_chainid(&self) -> U256 {
+        U256::from(self.chainid)
     }
 }
