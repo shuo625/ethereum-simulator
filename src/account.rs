@@ -1,7 +1,11 @@
 mod storage;
 
 pub use self::storage::Storage;
-use crate::{cli::cmd_errors::CmdTxErrCode, eth_types::H256, hash::keccak};
+use crate::{
+    cli::cmd_errors::CmdTxErrCode,
+    eth_types::{Address, Bytes, Secret, H256},
+    hash::keccak,
+};
 
 pub enum AccountType {
     EoA,
@@ -11,28 +15,28 @@ pub enum AccountType {
 pub struct Account {
     name: String,
     account_type: AccountType,
-    private_key: String,
-    address: String,
+    private_key: Secret,
+    address: Address,
     balance: u64,
     code_hash: H256,
-    code: String,
+    code: Bytes,
     storage: Storage,
 }
 
 impl Account {
-    pub fn new(name: String, code: String) -> Self {
+    pub fn new(name: String, code: Bytes) -> Self {
         //let private_key = PrivateKey::from_raw(&[22]).expect("create private key failed");
         //let address = private_key.public();
 
         Account {
             name,
-            account_type: if code == "" {
+            account_type: if code.len() == 0 {
                 AccountType::EoA
             } else {
                 AccountType::Contract
             },
-            private_key: String::new(),
-            address: String::new(),
+            private_key: Secret::random(),
+            address: Address::random(),
             balance: 100,
             code_hash: keccak(&code),
             code,
