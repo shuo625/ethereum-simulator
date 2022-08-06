@@ -1,3 +1,5 @@
+use crate::eth_types::U256;
+
 pub enum Instruction {
     STOP,
     ADD,
@@ -63,11 +65,7 @@ pub enum Instruction {
     MSIZE,
     GAS,
     JUMPDEST,
-    PUSH1(u8),
-    PUSH2(u16),
-    PUSH4(u32),
-    PUSH8(u64),
-    PUSH16(u128),
+    PUSH(U256),
     DUP(usize),
     SWAP(usize),
     LOG(usize),
