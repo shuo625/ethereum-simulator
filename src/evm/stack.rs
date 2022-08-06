@@ -20,4 +20,18 @@ impl Stack {
     pub fn pop(&mut self) -> U256 {
         self.stack.pop().unwrap()
     }
+
+    pub fn dup_top(&mut self, i: usize) {
+        let idx = self.stack.len() - i;
+        let value = self.stack[idx].clone();
+        self.stack.push(value);
+    }
+
+    pub fn swap_with_top(&mut self, i: usize) {
+        let last_value = self.stack.pop().unwrap();
+        let idx = self.stack.len() - i;
+        let tmp = self.stack[idx].clone();
+        self.stack[idx] = last_value;
+        self.stack.push(tmp);
+    }
 }
