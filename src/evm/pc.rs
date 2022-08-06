@@ -104,30 +104,11 @@ impl PC {
             0x59 => Some(Instruction::MSIZE),
             0x5a => Some(Instruction::GAS),
             0x5b => Some(Instruction::JUMPDEST),
-            0x60 => {
-                let value = self.code[self.pc + 1];
-                self.pc += 1;
-                Some(Instruction::PUSH1(value))
-            }
-            0x61 => {
-                let value = num_op::u8s_to_u16(&self.code[self.pc..self.pc + 2]);
-                self.pc += 2;
-                Some(Instruction::PUSH2(value))
-            }
-            0x63 => {
-                let value = num_op::u8s_to_u32(&self.code[self.pc..self.pc + 4]);
-                self.pc += 4;
-                Some(Instruction::PUSH4(value))
-            }
-            0x67 => {
-                let value = num_op::u8s_to_u64(&self.code[self.pc..self.pc + 8]);
-                self.pc += 8;
-                Some(Instruction::PUSH8(value))
-            }
-            0x6f => {
-                let value = num_op::u8s_to_u128(&self.code[self.pc..self.pc + 16]);
-                self.pc += 16;
-                Some(Instruction::PUSH16(value))
+            0x60..=0x7f => {
+                let size = (self.code[self.pc] - 0x60 + 1) as usize;
+                Some(Instruction::PUSH(U256::from_big_endian(
+                    &self.code[self.pc + 1..self.pc + size + 1],
+                )))
             }
             0x80..=0x8f => Some(Instruction::DUP((self.code[self.pc] - 0x80 + 1) as usize)),
             0x90..=0x9f => Some(Instruction::SWAP((self.code[self.pc] - 0x90 + 1) as usize)),
