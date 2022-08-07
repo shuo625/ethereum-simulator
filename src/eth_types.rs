@@ -3,11 +3,11 @@ pub use ethereum_types::{Address, Secret, H256, U256};
 // type for code
 pub type Code = Vec<u8>;
 
-pub trait FromStr {
+pub trait CodeConvert {
     fn from_str(code_str: &str) -> Self;
 }
 
-impl FromStr for Code {
+impl CodeConvert for Code {
     fn from_str(code_str: &str) -> Self {
         let mut code = Code::new();
 
