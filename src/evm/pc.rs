@@ -1,29 +1,14 @@
 use super::instructions::Instruction;
-use crate::eth_types::{num_op, U256};
+use crate::eth_types::{Code, U256};
 
-pub struct PC {
-    code: Vec<u8>,
+pub struct PC<'a> {
+    code: &'a Code,
     pc: usize,
 }
 
-impl PC {
-    pub fn new(code: &str) -> Self {
-        PC {
-            code: {
-                let bytes_origin = code.as_bytes();
-                let mut bytes: Vec<u8> = Vec::new();
-                let mut i = 0;
-                while i < bytes_origin.len() - 1 {
-                    bytes.push(num_op::u8s_to_u8(
-                        bytes_origin[i] - b'0',
-                        bytes_origin[i + 1] - b'0',
-                    ));
-                    i = i + 2;
-                }
-                bytes
-            },
-            pc: 0,
-        }
+impl<'a> PC<'a> {
+    pub fn new(code: &'a Code) -> Self {
+        PC { code, pc: 0 }
     }
 
     pub fn jump(&mut self, destination: U256) {
