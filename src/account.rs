@@ -60,4 +60,16 @@ impl Account {
             Err(CmdTxErrCode::NOTENOUGHBALANCE)
         }
     }
+
+    pub fn get_address(&self) -> &Address {
+        &self.address
+    }
+
+    pub fn get_name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn get_code(&self) -> &Code {
+        &self.code
+    }
 }
