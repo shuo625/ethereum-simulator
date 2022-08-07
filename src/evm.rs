@@ -5,4 +5,5 @@ mod pc;
 mod stack;
 mod vm;
 
+pub use ext::Ext;
 pub use vm::VM;
