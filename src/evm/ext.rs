@@ -36,4 +36,9 @@ impl<'a> Ext<'a> {
     pub fn get_chainid(&self) -> U256 {
         U256::from(self.chainid)
     }
+
+    pub fn get_callvalue(&self) -> U256 {
+        let value = self.tx.value();
+        U256::from(value)
+    }
 }
