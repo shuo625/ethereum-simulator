@@ -3,7 +3,7 @@ mod storage;
 pub use self::storage::Storage;
 use crate::{
     cli::cmd_errors::CmdTxErrCode,
-    eth_types::{Address, Bytes, Secret, H256},
+    eth_types::{Address, Code, Secret, H256},
     hash::keccak,
 };
 
@@ -19,12 +19,12 @@ pub struct Account {
     address: Address,
     balance: u64,
     code_hash: H256,
-    code: Bytes,
+    code: Code,
     storage: Storage,
 }
 
 impl Account {
-    pub fn new(name: String, code: Bytes) -> Self {
+    pub fn new(name: String, code: Code) -> Self {
         //let private_key = PrivateKey::from_raw(&[22]).expect("create private key failed");
         //let address = private_key.public();
 
