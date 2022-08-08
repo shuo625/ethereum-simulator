@@ -1,13 +1,13 @@
 use super::instructions::Instruction;
 use crate::eth_types::{Code, U256};
 
-pub struct PC<'a> {
-    code: &'a Code,
+pub struct PC {
+    code: Code,
     pc: usize,
 }
 
-impl<'a> PC<'a> {
-    pub fn new(code: &'a Code) -> Self {
+impl PC {
+    pub fn new(code: Code) -> Self {
         PC { code, pc: 0 }
     }
 
