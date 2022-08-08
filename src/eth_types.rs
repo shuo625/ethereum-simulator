@@ -3,16 +3,23 @@ pub use ethereum_types::{Address, Secret, H256, U256};
 // type for code
 pub type Code = Vec<u8>;
 
-pub trait CodeConvert {
-    fn from_str(code_str: &str) -> Self;
+/// Custom EthFrom<T> trait instead of that from std lib for implementing for external types
+pub trait EthFrom<T> {
+    fn ethfrom(obj: T) -> Self;
 }
 
-impl CodeConvert for Code {
-    fn from_str(code_str: &str) -> Self {
+impl EthFrom<Address> for U256 {
+    fn ethfrom(obj: Address) -> Self {
+        U256::from_big_endian(obj.as_bytes())
+    }
+}
+
+impl EthFrom<&str> for Code {
+    fn ethfrom(obj: &str) -> Self {
         let mut code = Code::new();
 
         let mut idx: usize = 0;
-        let bytes = code_str.as_bytes();
+        let bytes = obj.as_bytes();
 
         while idx < bytes.len() - 1 {
             let byte_part_a = bytes[idx] - b'0';
