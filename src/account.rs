@@ -73,7 +73,7 @@ impl Account {
         &self.code
     }
 
-    pub fn get_mut_storage(&self) -> &mut Storage {
+    pub fn get_mut_storage(&mut self) -> &mut Storage {
         &mut self.storage
     }
 }
