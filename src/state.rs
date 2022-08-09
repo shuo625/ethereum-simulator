@@ -6,7 +6,7 @@ use crate::{
     account::Account,
     block::Block,
     cli::cmd_errors::CmdTxErrCode,
-    eth_types::{Address, Code, EthFrom},
+    eth_types::{Address, Bytes, Code, EthFrom},
     evm::{Ext, VM},
     tx::Tx,
 };
@@ -57,7 +57,7 @@ impl State {
             Address::from_str(&params["from"].to_string()).unwrap(),
             Address::from_str(&params["to"].to_string()).unwrap(),
             params["value"].to_string().parse::<u64>().unwrap(),
-            params["data"].to_string(),
+            Bytes::ethfrom(&params["data"].to_string()),
         );
         self.handle_tx(&tx);
         self.txs.push(tx);
@@ -83,7 +83,7 @@ impl State {
     fn handle_tx(&mut self, tx: &Tx) {
         if tx.to().to_string() == "" {
             self.handle_tx_deploy_contract(tx);
-        } else if tx.data() == "" {
+        } else if tx.data().len() == 0 {
             self.handle_tx_eoa_to_eoa(tx);
         } else {
             self.handle_tx_call_contract(tx);
@@ -93,7 +93,7 @@ impl State {
     fn handle_tx_eoa_to_eoa(&self, tx: &Tx) {}
 
     fn handle_tx_deploy_contract(&mut self, tx: &Tx) {
-        let address = self.account_add_inner("Contract", Code::ethfrom(tx.data()));
+        let address = self.account_add_inner("Contract", tx.data().clone());
         let account = self.get_account_by_address(&address);
         let mut vm = VM::new(account.get_code().clone());
         let mut ext = Ext::new(address, &mut self.accounts, tx);
