@@ -110,9 +110,12 @@ impl VM {
                     self.stack.push(ext.get_balance(&address));
                 }
                 Instruction::ORIGIN => self.stack.push(ext.get_origin()),
-                Instruction::CALLER => {}
+                Instruction::CALLER => self.stack.push(ext.get_caller()),
                 Instruction::CALLVALUE => self.stack.push(ext.get_callvalue()),
-                Instruction::CALLDATALOAD => {}
+                Instruction::CALLDATALOAD => {
+                    let i = self.stack.pop();
+                    self.stack.push(ext.get_calldata(i));
+                }
                 Instruction::CALLDATASIZE => {}
                 Instruction::CALLDATACOPY => {}
                 Instruction::CODESIZE => {}
