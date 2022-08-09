@@ -72,8 +72,12 @@ impl State {
         address
     }
 
-    fn get_account_by_address(&self, address: Address) -> &Account {
+    fn get_account_by_address(&self, address: &Address) -> &Account {
         self.accounts.get(&address).unwrap()
+    }
+
+    fn get_mut_account_by_address(&mut self, address: &Address) -> &mut Account {
+        self.accounts.get_mut(&address).unwrap()
     }
 
     fn handle_tx(&mut self, tx: &Tx) {
@@ -90,9 +94,9 @@ impl State {
 
     fn handle_tx_deploy_contract(&mut self, tx: &Tx) {
         let address = self.account_add_inner("Contract", Code::ethfrom(tx.data()));
-        let account = self.get_account_by_address(address);
-        let mut vm = VM::new(account.get_code());
-        let mut ext = Ext::new(self, account, tx);
+        let account = self.get_account_by_address(&address);
+        let mut vm = VM::new(account.get_code().clone());
+        let mut ext = Ext::new(address, &mut self.accounts, tx);
         vm.execute(&mut ext);
     }
 

@@ -56,4 +56,8 @@ impl<'a> Ext<'a> {
     pub fn get_balance(&self, address: &Address) -> U256 {
         U256::from(self.accounts.get(address).unwrap().get_balance())
     }
+
+    pub fn get_origin(&self) -> U256 {
+        U256::ethfrom(self.tx.from())
+    }
 }

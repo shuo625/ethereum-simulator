@@ -1,9 +1,13 @@
 use core::panic;
+use std::str::FromStr;
 
 use ethereum_types::{BigEndianHash, H256};
 
 use super::{ext::Ext, instructions::Instruction, memory::Memory, pc::PC, stack::Stack};
-use crate::{eth_types::U256, hash};
+use crate::{
+    eth_types::{Address, Code, U256},
+    hash,
+};
 
 pub struct VM {
     stack: Stack,
@@ -12,7 +16,7 @@ pub struct VM {
 }
 
 impl VM {
-    pub fn new(code: &str) -> Self {
+    pub fn new(code: Code) -> Self {
         VM {
             stack: Stack::new(),
             memory: Memory::new(),
@@ -100,6 +104,34 @@ impl VM {
                     let k = hash::keccak(self.memory.read_slice(offset, size));
                     self.stack.push(U256::from(k.as_bytes()));
                 }
+                Instruction::ADDRESS => self.stack.push(ext.get_address()),
+                Instruction::BALANCE => {
+                    let address = Address::from_str(&self.stack.pop().to_string()).unwrap();
+                    self.stack.push(ext.get_balance(&address));
+                }
+                Instruction::ORIGIN => self.stack.push(ext.get_origin()),
+                Instruction::CALLER => {}
+                Instruction::CALLVALUE => self.stack.push(ext.get_callvalue()),
+                Instruction::CALLDATALOAD => {}
+                Instruction::CALLDATASIZE => {}
+                Instruction::CALLDATACOPY => {}
+                Instruction::CODESIZE => {}
+                Instruction::CODECOPY => {}
+                Instruction::GASPRICE => {}
+                Instruction::EXTCODESIZE => {}
+                Instruction::EXTCODECOPY => {}
+                Instruction::RETURNDATASIZE => {}
+                Instruction::RETURNDATACOPY => {}
+                Instruction::EXTCODEHASH => {}
+                Instruction::BLOCKHASH => {}
+                Instruction::COINBASE => {}
+                Instruction::TIMESTAMP => {}
+                Instruction::NUMBER => {}
+                Instruction::DIFFICULT => {}
+                Instruction::GASLIMIT => {}
+                Instruction::CHAINID => self.stack.push(ext.get_chainid()),
+                Instruction::SELFBALANCE => {}
+                Instruction::BASEFEE => {}
                 Instruction::POP => {
                     self.stack.pop();
                 }
@@ -142,7 +174,16 @@ impl VM {
                 Instruction::DUP(i) => self.stack.dup_top(i),
                 Instruction::SWAP(i) => self.stack.swap_with_top(i),
                 Instruction::LOG(i) => {}
-                _ => panic!("Invalid instruction"),
+                Instruction::CREAT => {}
+                Instruction::CALL => {}
+                Instruction::CALLCODE => {}
+                Instruction::RETURN => {}
+                Instruction::DELEGATCALL => {}
+                Instruction::CREAT2 => {}
+                Instruction::STATICCALL => {}
+                Instruction::REVERT => {}
+                Instruction::SELFDESTRUCT => {}
+                Instruction::INVALID => panic!("Invalid instruction"),
             }
         }
     }
