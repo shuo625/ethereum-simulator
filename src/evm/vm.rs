@@ -132,7 +132,7 @@ impl VM {
                     self.memory
                         .write_slice(dest_offset, ext.get_code_slice(offset, length));
                 }
-                Instruction::GASPRICE => {}
+                Instruction::GASPRICE => self.stack.push(ext.get_gasprice()),
                 Instruction::EXTCODESIZE => {}
                 Instruction::EXTCODECOPY => {}
                 Instruction::RETURNDATASIZE => {}

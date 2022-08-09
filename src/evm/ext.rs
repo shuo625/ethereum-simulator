@@ -89,4 +89,8 @@ impl<'a> Ext<'a> {
         let len = length.as_usize();
         &self.accounts.get(&self.account).unwrap().get_code()[off..off + len]
     }
+
+    pub fn get_gasprice(&self) -> U256 {
+        U256::from(self.tx.gasprice())
+    }
 }
