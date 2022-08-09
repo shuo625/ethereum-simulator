@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     account::Account,
-    eth_types::{Address, EthFrom, H256, U256},
+    eth_types::{Address, Code, EthFrom, H256, U256},
     tx::Tx,
 };
 
@@ -59,5 +59,15 @@ impl<'a> Ext<'a> {
 
     pub fn get_origin(&self) -> U256 {
         U256::ethfrom(self.tx.from())
+    }
+
+    pub fn get_caller(&self) -> U256 {
+        U256::ethfrom(self.tx.from())
+    }
+
+    pub fn get_calldata(&self, i: U256) -> U256 {
+        let idx = i.as_usize();
+        let call_data = Code::from(self.tx.data());
+        U256::from_big_endian(&call_data[idx..idx + 32])
     }
 }
