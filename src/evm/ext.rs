@@ -69,4 +69,8 @@ impl<'a> Ext<'a> {
         let idx = i.as_usize();
         U256::from_big_endian(&self.tx.data()[idx..idx + 32])
     }
+
+    pub fn get_calldatasize(&self) -> U256 {
+        U256::from(self.tx.data().len())
+    }
 }
