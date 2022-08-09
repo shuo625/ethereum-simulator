@@ -1,6 +1,6 @@
 use sha256;
 
-use crate::eth_types::Address;
+use crate::eth_types::{Address, Bytes};
 
 // use crate::eth_types::Address;
 
@@ -9,11 +9,11 @@ pub struct Tx {
     from: Address,
     to: Address,
     value: u64,
-    data: String,
+    data: Bytes,
 }
 
 impl Tx {
-    pub fn new(from: Address, to: Address, value: u64, data: String) -> Self {
+    pub fn new(from: Address, to: Address, value: u64, data: Bytes) -> Self {
         Tx {
             from,
             to,
@@ -34,7 +34,7 @@ impl Tx {
         self.value
     }
 
-    pub fn data(&self) -> &str {
+    pub fn data(&self) -> &Bytes {
         &self.data
     }
 
