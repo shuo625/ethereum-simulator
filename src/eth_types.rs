@@ -21,6 +21,12 @@ impl EthFrom<&Address> for U256 {
     }
 }
 
+impl EthFrom<H256> for U256 {
+    fn ethfrom(obj: H256) -> Self {
+        U256::from_big_endian(obj.as_bytes())
+    }
+}
+
 impl EthFrom<U256> for Address {
     fn ethfrom(obj: U256) -> Self {
         let mut s = Bytes::new();
