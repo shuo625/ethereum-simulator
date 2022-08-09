@@ -5,7 +5,7 @@ use ethereum_types::{BigEndianHash, H256};
 
 use super::{ext::Ext, instructions::Instruction, memory::Memory, pc::PC, stack::Stack};
 use crate::{
-    eth_types::{Address, Code, U256},
+    eth_types::{Address, Code, EthFrom, U256},
     hash,
 };
 
@@ -133,11 +133,26 @@ impl VM {
                         .write_slice(dest_offset, ext.get_code_slice(offset, length));
                 }
                 Instruction::GASPRICE => self.stack.push(ext.get_gasprice()),
-                Instruction::EXTCODESIZE => {}
-                Instruction::EXTCODECOPY => {}
+                Instruction::EXTCODESIZE => {
+                    let address = Address::ethfrom(self.stack.pop());
+                    self.stack.push(ext.get_ext_codesize(&address))
+                }
+                Instruction::EXTCODECOPY => {
+                    let address = Address::ethfrom(self.stack.pop());
+                    let dest_offset = self.stack.pop();
+                    let offset = self.stack.pop();
+                    let length = self.stack.pop();
+                    self.memory.write_slice(
+                        dest_offset,
+                        ext.get_ext_code_slice(&address, offset, length),
+                    );
+                }
                 Instruction::RETURNDATASIZE => {}
                 Instruction::RETURNDATACOPY => {}
-                Instruction::EXTCODEHASH => {}
+                Instruction::EXTCODEHASH => {
+                    let address = Address::ethfrom(self.stack.pop());
+                    self.stack.push(ext.get_ext_code_hash(&address));
+                }
                 Instruction::BLOCKHASH => {}
                 Instruction::COINBASE => {}
                 Instruction::TIMESTAMP => {}
