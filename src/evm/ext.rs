@@ -79,4 +79,8 @@ impl<'a> Ext<'a> {
         let len = length.as_usize();
         &self.tx.data()[off..off + len]
     }
+
+    pub fn get_codesize(&self) -> U256 {
+        U256::from(self.accounts.get(&self.account).unwrap().get_code().len())
+    }
 }
