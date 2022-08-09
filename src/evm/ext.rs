@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use crate::{
     account::Account,
     eth_types::{Address, EthFrom, H256, U256},
+    hash,
     tx::Tx,
 };
 
@@ -100,5 +101,9 @@ impl<'a> Ext<'a> {
         let off = offset.as_usize();
         let len = length.as_usize();
         &self.accounts.get(address).unwrap().get_code()[off..off + len]
+    }
+
+    pub fn get_ext_code_hash(&self, address: &Address) -> U256 {
+        U256::ethfrom(hash::keccak(self.accounts.get(address).unwrap().get_code()))
     }
 }
