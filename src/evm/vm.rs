@@ -116,8 +116,14 @@ impl VM {
                     let i = self.stack.pop();
                     self.stack.push(ext.get_calldata(i));
                 }
-                Instruction::CALLDATASIZE => {}
-                Instruction::CALLDATACOPY => {}
+                Instruction::CALLDATASIZE => self.stack.push(ext.get_calldatasize()),
+                Instruction::CALLDATACOPY => {
+                    let dest_offset = self.stack.pop();
+                    let offset = self.stack.pop();
+                    let length = self.stack.pop();
+                    self.memory
+                        .write_slice(dest_offset, ext.read_calldata_slice(offset, length));
+                }
                 Instruction::CODESIZE => {}
                 Instruction::CODECOPY => {}
                 Instruction::GASPRICE => {}
