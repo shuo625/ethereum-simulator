@@ -85,9 +85,7 @@ impl<'a> Ext<'a> {
     }
 
     pub fn get_code_slice(&self, offset: U256, length: U256) -> &[u8] {
-        let off = offset.as_usize();
-        let len = length.as_usize();
-        &self.accounts.get(&self.account).unwrap().get_code()[off..off + len]
+        self.get_ext_code_slice(&self.account, offset, length)
     }
 
     pub fn get_gasprice(&self) -> U256 {
@@ -96,5 +94,11 @@ impl<'a> Ext<'a> {
 
     pub fn get_ext_codesize(&self, address: &Address) -> U256 {
         U256::from(self.accounts.get(address).unwrap().get_code().len())
+    }
+
+    pub fn get_ext_code_slice(&self, address: &Address, offset: U256, length: U256) -> &[u8] {
+        let off = offset.as_usize();
+        let len = length.as_usize();
+        &self.accounts.get(address).unwrap().get_code()[off..off + len]
     }
 }
