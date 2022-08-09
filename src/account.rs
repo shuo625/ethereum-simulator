@@ -1,6 +1,6 @@
 mod storage;
 
-pub use self::storage::Storage;
+use self::storage::Storage;
 use crate::{
     cli::cmd_errors::CmdTxErrCode,
     eth_types::{Address, Code, Secret, H256},
@@ -73,7 +73,11 @@ impl Account {
         &self.code
     }
 
-    pub fn get_mut_storage(&mut self) -> &mut Storage {
-        &mut self.storage
+    pub fn set_storage(&mut self, key: H256, value: H256) {
+        self.storage.set(key, value);
+    }
+
+    pub fn get_storage(&self, key: &H256) -> H256 {
+        self.storage.get(key)
     }
 }
