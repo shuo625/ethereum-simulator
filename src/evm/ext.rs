@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     account::Account,
-    eth_types::{Address, Code, EthFrom, H256, U256},
+    eth_types::{Address, EthFrom, H256, U256},
     tx::Tx,
 };
 
@@ -81,7 +81,7 @@ impl<'a> Ext<'a> {
     }
 
     pub fn get_codesize(&self) -> U256 {
-        U256::from(self.accounts.get(&self.account).unwrap().get_code().len())
+        self.get_ext_codesize(&self.account)
     }
 
     pub fn get_code_slice(&self, offset: U256, length: U256) -> &[u8] {
@@ -92,5 +92,9 @@ impl<'a> Ext<'a> {
 
     pub fn get_gasprice(&self) -> U256 {
         U256::from(self.tx.gasprice())
+    }
+
+    pub fn get_ext_codesize(&self, address: &Address) -> U256 {
+        U256::from(self.accounts.get(address).unwrap().get_code().len())
     }
 }
