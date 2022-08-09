@@ -74,7 +74,7 @@ impl<'a> Ext<'a> {
         U256::from(self.tx.data().len())
     }
 
-    pub fn read_calldata_slice(&self, offset: U256, length: U256) -> &[u8] {
+    pub fn get_calldata_slice(&self, offset: U256, length: U256) -> &[u8] {
         let off = offset.as_usize();
         let len = length.as_usize();
         &self.tx.data()[off..off + len]
@@ -82,5 +82,11 @@ impl<'a> Ext<'a> {
 
     pub fn get_codesize(&self) -> U256 {
         U256::from(self.accounts.get(&self.account).unwrap().get_code().len())
+    }
+
+    pub fn get_code_slice(&self, offset: U256, length: U256) -> &[u8] {
+        let off = offset.as_usize();
+        let len = length.as_usize();
+        &self.accounts.get(&self.account).unwrap().get_code()[off..off + len]
     }
 }
