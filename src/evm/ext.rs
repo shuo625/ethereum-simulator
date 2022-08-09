@@ -73,4 +73,10 @@ impl<'a> Ext<'a> {
     pub fn get_calldatasize(&self) -> U256 {
         U256::from(self.tx.data().len())
     }
+
+    pub fn read_calldata_slice(&self, offset: U256, length: U256) -> &[u8] {
+        let off = offset.as_usize();
+        let len = length.as_usize();
+        &self.tx.data()[off..off + len]
+    }
 }
