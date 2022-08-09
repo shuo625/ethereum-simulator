@@ -122,10 +122,16 @@ impl VM {
                     let offset = self.stack.pop();
                     let length = self.stack.pop();
                     self.memory
-                        .write_slice(dest_offset, ext.read_calldata_slice(offset, length));
+                        .write_slice(dest_offset, ext.get_calldata_slice(offset, length));
                 }
-                Instruction::CODESIZE => {}
-                Instruction::CODECOPY => {}
+                Instruction::CODESIZE => self.stack.push(ext.get_codesize()),
+                Instruction::CODECOPY => {
+                    let dest_offset = self.stack.pop();
+                    let offset = self.stack.pop();
+                    let length = self.stack.pop();
+                    self.memory
+                        .write_slice(dest_offset, ext.get_code_slice(offset, length));
+                }
                 Instruction::GASPRICE => {}
                 Instruction::EXTCODESIZE => {}
                 Instruction::EXTCODECOPY => {}
