@@ -45,15 +45,15 @@ impl Account {
         }
     }
 
-    pub fn get_balance(&self) -> u64 {
+    pub fn get_balance(&self) -> usize {
         self.balance
     }
 
-    pub fn add_balance(&mut self, value: u64) {
+    pub fn add_balance(&mut self, value: usize) {
         self.balance += value;
     }
 
-    pub fn sub_balance(&mut self, value: u64) -> Result<(), AccountError> {
+    pub fn sub_balance(&mut self, value: usize) -> Result<(), AccountError> {
         if self.balance >= value {
             self.balance -= value;
             Ok(())
