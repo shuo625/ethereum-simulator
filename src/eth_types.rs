@@ -29,6 +29,16 @@ impl EthFrom<H256> for U256 {
     }
 }
 
+impl EthFrom<bool> for U256 {
+    fn ethfrom(obj: bool) -> Self {
+        if obj {
+            U256::one()
+        } else {
+            U256::zero()
+        }
+    }
+}
+
 impl EthFrom<U256> for Address {
     fn ethfrom(obj: U256) -> Self {
         let addr: H256 = BigEndianHash::from_uint(&obj);
