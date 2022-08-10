@@ -34,4 +34,31 @@ impl Stack {
         self.stack[idx] = last_value;
         self.stack.push(tmp);
     }
+
+    pub fn one_item_op<F>(&mut self, op: F)
+    where
+        F: FnOnce(U256) -> U256,
+    {
+        let a = self.stack.pop();
+        self.stack.push(op(a));
+    }
+
+    pub fn two_items_op<F>(&mut self, op: F)
+    where
+        F: FnOnce(U256, U256) -> U256,
+    {
+        let a = self.stack.pop();
+        let b = self.stack.pop();
+        self.stack.push(op(a, b));
+    }
+
+    pub fn three_items_op<F>(&mut self, op: F)
+    where
+        F: FnOnce(U256, U256, U256) -> U256,
+    {
+        let a = self.stack.pop();
+        let b = self.stack.pop();
+        let c = self.stack.pop();
+        self.stack.push(op(a, b, c));
+    }
 }
