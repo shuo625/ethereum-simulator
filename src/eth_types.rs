@@ -64,6 +64,12 @@ impl EthFrom<&str> for Vec<u8> {
     }
 }
 
+impl EthFrom<U256> for H256 {
+    fn ethfrom(obj: U256) -> Self {
+        H256::from_uint(&obj)
+    }
+}
+
 pub trait EthSign {
     fn to_sign(self) -> Self;
     fn is_neg(&self) -> bool;
