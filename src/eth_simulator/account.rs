@@ -6,6 +6,11 @@ use super::{
     hash::keccak,
 };
 
+pub enum AccountError {
+    NotEnoughBalance,
+    NotExistedStorageKey,
+}
+
 pub enum AccountType {
     EoA,
     Contract,
@@ -24,9 +29,6 @@ pub struct Account {
 
 impl Account {
     pub fn new(name: String, code: Code) -> Self {
-        //let private_key = PrivateKey::from_raw(&[22]).expect("create private key failed");
-        //let address = private_key.public();
-
         Account {
             name,
             account_type: if code.len() == 0 {
@@ -51,10 +53,12 @@ impl Account {
         self.balance += value;
     }
 
-    pub fn sub_balance(&mut self, value: u64) {
+    pub fn sub_balance(&mut self, value: u64) -> Result<(), AccountError> {
         if self.balance >= value {
             self.balance -= value;
+            Ok(())
         } else {
+            Err(AccountError::NotEnoughBalance)
         }
     }
 
@@ -74,7 +78,10 @@ impl Account {
         self.storage.set(key, value);
     }
 
-    pub fn get_storage(&self, key: &H256) -> H256 {
-        self.storage.get(key)
+    pub fn get_storage(&self, key: &H256) -> Result<H256, AccountError> {
+        match self.storage.get(key) {
+            Some(v) => Ok(v),
+            None => Err(AccountError::NotExistedStorageKey),
+        }
     }
 }
