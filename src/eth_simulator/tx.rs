@@ -1,6 +1,7 @@
-use sha256;
-
-use super::eth_types::{Address, Bytes};
+use super::{
+    eth_types::{Address, Bytes, H256},
+    hash,
+};
 
 pub struct Tx {
     from: Address,
@@ -41,8 +42,8 @@ impl Tx {
         self.gasprice
     }
 
-    pub fn hash(&self) -> String {
-        sha256::digest(format!(
+    pub fn hash(&self) -> H256 {
+        hash::keccak(format!(
             "{}{}{}",
             &self.from,
             &self.to,
