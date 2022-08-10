@@ -1,4 +1,4 @@
-use crate::eth_types::U256;
+use super::super::eth_types::U256;
 
 pub enum Instruction {
     STOP,

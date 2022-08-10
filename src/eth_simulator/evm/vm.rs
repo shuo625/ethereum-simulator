@@ -1,9 +1,15 @@
 use core::panic;
 
-use super::{ext::Ext, instructions::Instruction, memory::Memory, pc::PC, stack::Stack};
-use crate::{
-    eth_types::{Address, Bytes, Code, EthFrom, EthSign, H256, U256},
-    hash,
+use super::{
+    super::{
+        eth_types::{Address, Bytes, Code, EthFrom, EthSign, H256, U256},
+        hash,
+    },
+    ext::Ext,
+    instructions::Instruction,
+    memory::Memory,
+    pc::PC,
+    stack::Stack,
 };
 
 pub enum VMResult {

@@ -2,10 +2,9 @@ use serde_json::{self, Value};
 
 use std::{collections::HashMap, fs::File, io::BufReader, str::FromStr};
 
-use crate::{
+use super::{
     account::Account,
     block::Block,
-    cli::cmd_errors::CmdTxErrCode,
     eth_types::{Address, Bytes, Code, EthFrom},
     evm::{Ext, VM},
     tx::Tx,
@@ -50,7 +49,7 @@ impl State {
         }
     }
 
-    pub fn tx_send(&mut self, params_file: &str) -> Result<(), CmdTxErrCode> {
+    pub fn tx_send(&mut self, params_file: &str) {
         let params: Value =
             serde_json::from_reader(BufReader::new(File::open(params_file).unwrap())).unwrap();
         let tx = Tx::new(
@@ -102,8 +101,9 @@ impl State {
 
     fn handle_tx_call_contract(&self, tx: &Tx) {}
 
-    fn mine(&mut self) -> Result<(), CmdTxErrCode> {
+    fn mine(&mut self) {
         let last_tx = self.txs.last().unwrap();
+        self.handle_tx(last_tx);
 
         if let Some(from_account) = self.accounts.get_mut(last_tx.from()) {
             // if from exists

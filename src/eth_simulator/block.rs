@@ -1,6 +1,6 @@
 use sha256;
 
-use crate::tx::Tx;
+use super::tx::Tx;
 
 pub struct Block {
     tx: Tx,

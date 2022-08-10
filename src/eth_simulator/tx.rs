@@ -1,6 +1,6 @@
 use sha256;
 
-use crate::eth_types::{Address, Bytes};
+use super::eth_types::{Address, Bytes};
 
 pub struct Tx {
     from: Address,

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::eth_types::H256;
+use super::super::eth_types::H256;
 
 pub struct Storage {
     storage: HashMap<H256, H256>,

@@ -1,5 +1,7 @@
-use super::instructions::Instruction;
-use crate::eth_types::{Code, U256};
+use super::{
+    super::eth_types::{Code, U256},
+    instructions::Instruction,
+};
 
 pub struct PC {
     code: Code,

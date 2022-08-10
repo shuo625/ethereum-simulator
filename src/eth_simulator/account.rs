@@ -1,8 +1,7 @@
 mod storage;
 
 use self::storage::Storage;
-use crate::{
-    cli::cmd_errors::CmdTxErrCode,
+use super::{
     eth_types::{Address, Code, Secret, H256},
     hash::keccak,
 };
@@ -52,12 +51,10 @@ impl Account {
         self.balance += value;
     }
 
-    pub fn sub_balance(&mut self, value: u64) -> Result<(), CmdTxErrCode> {
+    pub fn sub_balance(&mut self, value: u64) {
         if self.balance >= value {
             self.balance -= value;
-            Ok(())
         } else {
-            Err(CmdTxErrCode::NOTENOUGHBALANCE)
         }
     }
 
