@@ -21,7 +21,7 @@ pub struct Account {
     account_type: AccountType,
     private_key: Secret,
     address: Address,
-    balance: u64,
+    balance: usize,
     code_hash: H256,
     code: Code,
     storage: Storage,

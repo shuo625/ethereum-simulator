@@ -6,13 +6,13 @@ use super::{
 pub struct Tx {
     from: Address,
     to: Address,
-    value: u64,
+    value: usize,
     data: Bytes,
-    gasprice: u64,
+    gasprice: usize,
 }
 
 impl Tx {
-    pub fn new(from: Address, to: Address, value: u64, data: Bytes) -> Self {
+    pub fn new(from: Address, to: Address, value: usize, data: Bytes) -> Self {
         Tx {
             from,
             to,
@@ -30,7 +30,7 @@ impl Tx {
         &self.to
     }
 
-    pub fn value(&self) -> u64 {
+    pub fn value(&self) -> usize {
         self.value
     }
 
@@ -38,7 +38,7 @@ impl Tx {
         &self.data
     }
 
-    pub fn gasprice(&self) -> u64 {
+    pub fn gasprice(&self) -> usize {
         self.gasprice
     }
 
