@@ -39,7 +39,7 @@ impl Stack {
     where
         F: FnOnce(U256) -> U256,
     {
-        let a = self.stack.pop();
+        let a = self.stack.pop().unwrap();
         self.stack.push(op(a));
     }
 
@@ -47,8 +47,8 @@ impl Stack {
     where
         F: FnOnce(U256, U256) -> U256,
     {
-        let a = self.stack.pop();
-        let b = self.stack.pop();
+        let a = self.stack.pop().unwrap();
+        let b = self.stack.pop().unwrap();
         self.stack.push(op(a, b));
     }
 
@@ -56,9 +56,9 @@ impl Stack {
     where
         F: FnOnce(U256, U256, U256) -> U256,
     {
-        let a = self.stack.pop();
-        let b = self.stack.pop();
-        let c = self.stack.pop();
+        let a = self.stack.pop().unwrap();
+        let b = self.stack.pop().unwrap();
+        let c = self.stack.pop().unwrap();
         self.stack.push(op(a, b, c));
     }
 }
