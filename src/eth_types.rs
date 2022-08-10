@@ -1,3 +1,4 @@
+use ethereum_types::BigEndianHash;
 pub use ethereum_types::{Address, Secret, H256, U256};
 
 // type for code
@@ -11,27 +12,27 @@ pub trait EthFrom<T> {
 
 impl EthFrom<Address> for U256 {
     fn ethfrom(obj: Address) -> Self {
-        U256::from_big_endian(obj.as_bytes())
+        H256::from(obj).into_uint()
     }
 }
 
 impl EthFrom<&Address> for U256 {
     fn ethfrom(obj: &Address) -> Self {
-        U256::from_big_endian(obj.as_bytes())
+        let addr = obj.clone();
+        H256::from(addr).into_uint()
     }
 }
 
 impl EthFrom<H256> for U256 {
     fn ethfrom(obj: H256) -> Self {
-        U256::from_big_endian(obj.as_bytes())
+        obj.into_uint()
     }
 }
 
 impl EthFrom<U256> for Address {
     fn ethfrom(obj: U256) -> Self {
-        let mut s = Bytes::new();
-        obj.to_big_endian(s.as_mut_slice());
-        Address::from_slice(s.as_slice())
+        let addr: H256 = BigEndianHash::from_uint(&obj);
+        Address::from(addr)
     }
 }
 
