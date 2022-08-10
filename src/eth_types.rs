@@ -64,11 +64,12 @@ impl EthFrom<&str> for Vec<u8> {
     }
 }
 
-pub trait EthConvert {
+pub trait EthSign {
     fn to_sign(self) -> Self;
+    fn is_neg(&self) -> bool;
 }
 
-impl EthConvert for U256 {
+impl EthSign for U256 {
     fn to_sign(self) -> Self {
         let U256(arr) = self;
         let sign = arr[3].leading_zeros() == 0;
@@ -78,6 +79,11 @@ impl EthConvert for U256 {
         } else {
             self
         }
+    }
+
+    fn is_neg(&self) -> bool {
+        let U256(arr) = self;
+        arr[3].leading_zeros() == 0
     }
 }
 
