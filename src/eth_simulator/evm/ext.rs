@@ -31,16 +31,21 @@ impl<'a> Ext<'a> {
         }
     }
 
-    pub fn set_storage(&mut self, key: H256, value: H256) {
+    pub fn set_storage(&mut self, key: U256, value: U256) {
         self.accounts
             .get_mut(&self.account)
             .unwrap()
-            .set_storage(key, value);
+            .set_storage(H256::ethfrom(key), H256::ethfrom(value));
     }
 
-    pub fn get_storage(&self, key: &H256) -> Result<H256, ExtError> {
-        match self.accounts.get(&self.account).unwrap().get_storage(key) {
-            Ok(v) => Ok(v),
+    pub fn get_storage(&self, key: U256) -> Result<U256, ExtError> {
+        match self
+            .accounts
+            .get(&self.account)
+            .unwrap()
+            .get_storage(&H256::ethfrom(key))
+        {
+            Ok(v) => Ok(U256::ethfrom(v)),
             Err(_) => Err(ExtError::NotExistedStorageKey),
         }
     }
