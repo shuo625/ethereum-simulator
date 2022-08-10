@@ -6,6 +6,7 @@ pub type Code = Vec<u8>;
 pub type Bytes = Vec<u8>;
 
 /// Custom EthFrom<T> trait instead of that from std lib for implementing for external types
+/// Make EthFrom as a unified type conversion between eth types
 pub trait EthFrom<T> {
     fn ethfrom(obj: T) -> Self;
 }
@@ -41,6 +42,12 @@ impl EthFrom<bool> for U256 {
 
 impl EthFrom<u64> for U256 {
     fn ethfrom(obj: u64) -> Self {
+        U256::from(obj)
+    }
+}
+
+impl EthFrom<usize> for U256 {
+    fn ethfrom(obj: usize) -> Self {
         U256::from(obj)
     }
 }
