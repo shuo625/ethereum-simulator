@@ -5,9 +5,15 @@ use ethereum_types::{BigEndianHash, H256};
 
 use super::{ext::Ext, instructions::Instruction, memory::Memory, pc::PC, stack::Stack};
 use crate::{
-    eth_types::{Address, Code, EthFrom, U256},
+    eth_types::{Address, Bytes, Code, EthConvert, EthFrom, U256},
     hash,
 };
+
+pub enum VMResult {
+    Ok,
+    Stop,
+    Return(Bytes),
+}
 
 pub struct VM {
     stack: Stack,
@@ -51,10 +57,10 @@ impl VM {
         self.stack.push(op(a, b, c));
     }
 
-    pub fn execute(&mut self, ext: &mut Ext) {
+    pub fn execute(&mut self, ext: &mut Ext) -> VMResult {
         while let Some(instruction) = self.pc.next() {
             match instruction {
-                Instruction::STOP => return,
+                Instruction::STOP => return VMResult::Stop,
                 Instruction::ADD => self.stack_two_items_op(|a, b| a + b),
                 Instruction::MUL => self.stack_two_items_op(|a, b| a * b),
                 Instruction::SUB => self.stack_two_items_op(|a, b| a - b),
@@ -102,7 +108,7 @@ impl VM {
                     let offset = self.stack.pop();
                     let size = self.stack.pop();
                     let k = hash::keccak(self.memory.read_slice(offset, size));
-                    self.stack.push(U256::from(k.as_bytes()));
+                    self.stack.push(U256::ethfrom(k));
                 }
                 Instruction::ADDRESS => self.stack.push(ext.get_address()),
                 Instruction::BALANCE => {
@@ -207,7 +213,11 @@ impl VM {
                 Instruction::CREAT => {}
                 Instruction::CALL => {}
                 Instruction::CALLCODE => {}
-                Instruction::RETURN => {}
+                Instruction::RETURN => {
+                    let offset = self.stack.pop();
+                    let length = self.stack.pop();
+                    return VMResult::Return(Bytes::from(self.memory.read_slice(offset, length)));
+                }
                 Instruction::DELEGATCALL => {}
                 Instruction::CREAT2 => {}
                 Instruction::STATICCALL => {}
@@ -216,5 +226,7 @@ impl VM {
                 Instruction::INVALID => panic!("Invalid instruction"),
             }
         }
+
+        VMResult::Ok
     }
 }
