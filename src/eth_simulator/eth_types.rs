@@ -52,6 +52,12 @@ impl EthFrom<usize> for U256 {
     }
 }
 
+impl EthFrom<&[u8]> for U256 {
+    fn ethfrom(obj: &[u8]) -> Self {
+        U256::from_big_endian(obj)
+    }
+}
+
 impl EthFrom<U256> for Address {
     fn ethfrom(obj: U256) -> Self {
         let addr: H256 = BigEndianHash::from_uint(&obj);
