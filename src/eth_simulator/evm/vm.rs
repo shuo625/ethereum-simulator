@@ -2,10 +2,10 @@ use core::panic;
 
 use super::{
     super::{
-        eth_types::{Address, Bytes, Code, EthFrom, EthSign, H256, U256},
+        eth_types::{Address, Bytes, Code, EthFrom, EthSign, U256},
         hash,
     },
-    ext::Ext,
+    ext::{Ext, ExtError},
     instructions::Instruction,
     memory::Memory,
     pc::PC,
@@ -16,6 +16,17 @@ pub enum VMResult {
     Ok,
     Stop,
     Return(Bytes),
+}
+
+pub enum VMErrorKind {
+    NotExistedAddress(Address),
+    NotExistedStorageKey,
+}
+
+pub struct VMError {
+    pub instruction: Instruction,
+    pub pc: usize,
+    pub error_kind: VMErrorKind,
 }
 
 pub struct VM {
@@ -33,10 +44,10 @@ impl VM {
         }
     }
 
-    pub fn execute(&mut self, ext: &mut Ext) -> VMResult {
+    pub fn execute(&mut self, ext: &mut Ext) -> Result<VMResult, VMError> {
         while let Some(instruction) = self.pc.next() {
             match instruction {
-                Instruction::STOP => return VMResult::Stop,
+                Instruction::STOP => return Ok(VMResult::Stop),
                 Instruction::ADD => self.stack.two_items_op(|a, b| a + b),
                 Instruction::MUL => self.stack.two_items_op(|a, b| a * b),
                 Instruction::SUB => self.stack.two_items_op(|a, b| a - b),
@@ -125,9 +136,22 @@ impl VM {
                     U256::ethfrom(hash::keccak(self.memory.read_slice(offset, length)))
                 }),
                 Instruction::ADDRESS => self.stack.push(ext.get_address()),
-                Instruction::BALANCE => self
-                    .stack
-                    .one_item_op(|addr| ext.get_balance(&Address::ethfrom(addr))),
+                Instruction::BALANCE => {
+                    let address = Address::ethfrom(self.stack.pop());
+                    match ext.get_balance(&address) {
+                        Ok(balance) => self.stack.push(balance),
+                        Err(err) => match err {
+                            ExtError::NotExistedAddress(address) => {
+                                return Err(VMError {
+                                    instruction: Instruction::BALANCE,
+                                    pc: self.pc.pc().as_usize(),
+                                    error_kind: VMErrorKind::NotExistedAddress(address),
+                                })
+                            }
+                            _ => {}
+                        },
+                    }
+                }
                 Instruction::ORIGIN => self.stack.push(ext.get_origin()),
                 Instruction::CALLER => self.stack.push(ext.get_caller()),
                 Instruction::CALLVALUE => self.stack.push(ext.get_callvalue()),
@@ -149,24 +173,61 @@ impl VM {
                         .write_slice(dest_offset, ext.get_code_slice(offset, length));
                 }
                 Instruction::GASPRICE => self.stack.push(ext.get_gasprice()),
-                Instruction::EXTCODESIZE => self
-                    .stack
-                    .one_item_op(|addr| ext.get_ext_codesize(&Address::ethfrom(addr))),
+                Instruction::EXTCODESIZE => {
+                    let address = Address::ethfrom(self.stack.pop());
+
+                    match ext.get_ext_codesize(&address) {
+                        Ok(value) => self.stack.push(value),
+                        Err(err) => match err {
+                            ExtError::NotExistedAddress(address) => {
+                                return Err(VMError {
+                                    instruction: Instruction::EXTCODESIZE,
+                                    pc: self.pc.pc().as_usize(),
+                                    error_kind: VMErrorKind::NotExistedAddress(address),
+                                })
+                            }
+                        },
+                    }
+                }
                 Instruction::EXTCODECOPY => {
                     let address = Address::ethfrom(self.stack.pop());
                     let dest_offset = self.stack.pop();
                     let offset = self.stack.pop();
                     let length = self.stack.pop();
-                    self.memory.write_slice(
-                        dest_offset,
-                        ext.get_ext_code_slice(&address, offset, length),
-                    );
+
+                    match ext.get_ext_code_slice(&address, offset, length) {
+                        Ok(value) => self.memory.write_slice(dest_offset, value),
+                        Err(err) => match err {
+                            ExtError::NotExistedAddress(address) => {
+                                return Err(VMError {
+                                    instruction: Instruction::EXTCODECOPY,
+                                    pc: self.pc.pc().as_usize(),
+                                    error_kind: VMErrorKind::NotExistedAddress(address),
+                                })
+                            }
+                            _ => {}
+                        },
+                    }
                 }
                 Instruction::RETURNDATASIZE => {}
                 Instruction::RETURNDATACOPY => {}
-                Instruction::EXTCODEHASH => self
-                    .stack
-                    .one_item_op(|addr| ext.get_ext_code_hash(&Address::ethfrom(addr))),
+                Instruction::EXTCODEHASH => {
+                    let address = Address::ethfrom(self.stack.pop());
+
+                    match ext.get_ext_code_hash(&address) {
+                        Ok(value) => self.stack.push(value),
+                        Err(err) => match err {
+                            ExtError::NotExistedAddress(address) => {
+                                return Err(VMError {
+                                    instruction: Instruction::EXTCODEHASH,
+                                    pc: self.pc.pc().as_usize(),
+                                    error_kind: VMErrorKind::NotExistedAddress(address),
+                                })
+                            }
+                            _ => {}
+                        },
+                    }
+                }
                 Instruction::BLOCKHASH => {}
                 Instruction::COINBASE => {}
                 Instruction::TIMESTAMP => {}
@@ -190,12 +251,26 @@ impl VM {
                     let value = self.stack.pop();
                     self.memory.write_byte(offset, value);
                 }
-                Instruction::SLOAD => self
-                    .stack
-                    .one_item_op(|key| U256::ethfrom(ext.get_storage(&H256::ethfrom(key)))),
+                Instruction::SLOAD => {
+                    let key = self.stack.pop();
+
+                    match ext.get_storage(key) {
+                        Ok(value) => self.stack.push(value),
+                        Err(err) => match err {
+                            ExtError::NotExistedStorageKey => {
+                                return Err(VMError {
+                                    instruction: Instruction::SLOAD,
+                                    pc: self.pc.pc().as_usize(),
+                                    error_kind: VMErrorKind::NotExistedStorageKey,
+                                })
+                            }
+                            _ => {}
+                        },
+                    }
+                }
                 Instruction::SSTORE => {
-                    let key = H256::ethfrom(self.stack.pop());
-                    let value = H256::ethfrom(self.stack.pop());
+                    let key = self.stack.pop();
+                    let value = self.stack.pop();
                     ext.set_storage(key, value);
                 }
                 Instruction::JUMP => self.pc.jump(self.stack.pop()),
@@ -220,7 +295,9 @@ impl VM {
                 Instruction::RETURN => {
                     let offset = self.stack.pop();
                     let length = self.stack.pop();
-                    return VMResult::Return(Bytes::from(self.memory.read_slice(offset, length)));
+                    return Ok(VMResult::Return(Bytes::from(
+                        self.memory.read_slice(offset, length),
+                    )));
                 }
                 Instruction::DELEGATCALL => {}
                 Instruction::CREAT2 => {}
@@ -231,6 +308,6 @@ impl VM {
             }
         }
 
-        VMResult::Ok
+        Ok(VMResult::Ok)
     }
 }
