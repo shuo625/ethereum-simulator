@@ -1,11 +1,8 @@
 use core::panic;
-use std::str::FromStr;
-
-use ethereum_types::{BigEndianHash, H256};
 
 use super::{ext::Ext, instructions::Instruction, memory::Memory, pc::PC, stack::Stack};
 use crate::{
-    eth_types::{Address, Bytes, Code, EthConvert, EthFrom, U256},
+    eth_types::{Address, Bytes, Code, EthFrom, EthSign, H256, U256},
     hash,
 };
 
@@ -30,98 +27,105 @@ impl VM {
         }
     }
 
-    fn stack_one_item_op<F>(&mut self, op: F)
-    where
-        F: FnOnce(U256) -> U256,
-    {
-        let a = self.stack.pop();
-        self.stack.push(op(a));
-    }
-
-    fn stack_two_items_op<F>(&mut self, op: F)
-    where
-        F: FnOnce(U256, U256) -> U256,
-    {
-        let a = self.stack.pop();
-        let b = self.stack.pop();
-        self.stack.push(op(a, b));
-    }
-
-    fn stack_three_items_op<F>(&mut self, op: F)
-    where
-        F: FnOnce(U256, U256, U256) -> U256,
-    {
-        let a = self.stack.pop();
-        let b = self.stack.pop();
-        let c = self.stack.pop();
-        self.stack.push(op(a, b, c));
-    }
-
     pub fn execute(&mut self, ext: &mut Ext) -> VMResult {
         while let Some(instruction) = self.pc.next() {
             match instruction {
                 Instruction::STOP => return VMResult::Stop,
-                Instruction::ADD => self.stack_two_items_op(|a, b| a + b),
-                Instruction::MUL => self.stack_two_items_op(|a, b| a * b),
-                Instruction::SUB => self.stack_two_items_op(|a, b| a - b),
-                // TODO: handle SDIV
-                Instruction::DIV | Instruction::SDIV => self.stack_two_items_op(|a, b| a / b),
-                // TODO: handle SMOD
-                Instruction::MOD | Instruction::SMOD => self.stack_two_items_op(|a, b| a % b),
-                Instruction::ADDMOD => self.stack_three_items_op(|a, b, n| (a + b) % n),
-                Instruction::MULMOD => self.stack_three_items_op(|a, b, n| (a * b) % n),
-                Instruction::EXP => self.stack_two_items_op(U256::pow),
-                // TODO: handle this
-                Instruction::SIGNEXTEND => self.stack_two_items_op(|b, x| b),
-                // TODO: handle SLT
-                Instruction::LT | Instruction::SLT => {
-                    self.stack_two_items_op(|a, b| if a < b { U256::one() } else { U256::zero() })
+                Instruction::ADD => self.stack.two_items_op(|a, b| a + b),
+                Instruction::MUL => self.stack.two_items_op(|a, b| a * b),
+                Instruction::SUB => self.stack.two_items_op(|a, b| a - b),
+                Instruction::DIV => self.stack.two_items_op(|a, b| a / b),
+                Instruction::SDIV => self.stack.two_items_op(|a, b| a.to_sign() / b.to_sign()),
+                Instruction::MOD => self.stack.two_items_op(|a, b| a % b),
+                Instruction::SMOD => self.stack.two_items_op(|a, b| a.to_sign() % b.to_sign()),
+                Instruction::ADDMOD => self.stack.three_items_op(|a, b, n| (a + b) % n),
+                Instruction::MULMOD => self.stack.three_items_op(|a, b, n| (a * b) % n),
+                Instruction::EXP => self.stack.two_items_op(U256::pow),
+                Instruction::SIGNEXTEND => {
+                    let bit_num = self.stack.pop();
+                    let number = self.stack.pop();
+                    let bit_position = bit_num.as_usize() * 8 + 7;
+                    let bit = number.bit(bit_position);
+                    let mask = (U256::one() << bit_position) - U256::one();
+                    self.stack
+                        .push(if bit { number | !mask } else { number | mask });
                 }
-                // TODO: handle SGT
-                Instruction::GT | Instruction::SGT => {
-                    self.stack_two_items_op(|a, b| if a > b { U256::one() } else { U256::zero() })
+                Instruction::LT => self.stack.two_items_op(|a, b| U256::ethfrom(a < b)),
+                Instruction::SLT => {
+                    let a = self.stack.pop().to_sign();
+                    let neg_a = a.is_neg();
+                    let b = self.stack.pop();
+                    let neg_b = b.is_neg();
+
+                    let is_positive_lt = a < b && !(neg_a | neg_b);
+                    let is_negative_lt = a > b && (neg_a & neg_b);
+                    let has_different_signs = neg_a && !neg_b;
+
+                    self.stack.push(U256::ethfrom(
+                        is_positive_lt | is_negative_lt | has_different_signs,
+                    ));
                 }
-                Instruction::EQ => {
-                    self.stack_two_items_op(|a, b| if a == b { U256::one() } else { U256::zero() })
+                Instruction::GT => self.stack.two_items_op(|a, b| U256::ethfrom(a > b)),
+                Instruction::SGT => {
+                    let a = self.stack.pop().to_sign();
+                    let neg_a = a.is_neg();
+                    let b = self.stack.pop().to_sign();
+                    let neg_b = b.is_neg();
+
+                    let is_positive_gt = a > b && !(neg_a | neg_b);
+                    let is_negative_gt = a < b && (neg_a & neg_b);
+                    let has_different_signs = !neg_a && neg_b;
+
+                    self.stack.push(U256::ethfrom(
+                        is_positive_gt | is_negative_gt | has_different_signs,
+                    ));
                 }
-                Instruction::ISZERO => self.stack_one_item_op(|a| {
-                    if a == U256::zero() {
-                        U256::one()
+                Instruction::EQ => self.stack.two_items_op(|a, b| U256::ethfrom(a == b)),
+                Instruction::ISZERO => self.stack.one_item_op(|a| U256::ethfrom(a.is_zero())),
+                Instruction::AND => self.stack.two_items_op(|a, b| a & b),
+                Instruction::OR => self.stack.two_items_op(|a, b| a | b),
+                Instruction::XOR => self.stack.two_items_op(|a, b| a ^ b),
+                Instruction::NOT => self.stack.one_item_op(|a| !a),
+                Instruction::BYTE => self
+                    .stack
+                    .two_items_op(|i, x| U256::from(x.byte(i.as_usize()))),
+                Instruction::SHL => self.stack.two_items_op(|shl, value| value << shl),
+                Instruction::SHR => self.stack.two_items_op(|shr, value| value >> shr),
+                Instruction::SAR => {
+                    const CONST_256: U256 = U256([256, 0, 0, 0]);
+                    const CONST_HIBIT: U256 = U256([0, 0, 0, 0x8000000000000000]);
+
+                    let shift = self.stack.pop();
+                    let value = self.stack.pop();
+                    let sign = value & CONST_HIBIT != U256::zero();
+
+                    let result = if shift >= CONST_256 {
+                        if sign {
+                            U256::max_value()
+                        } else {
+                            U256::zero()
+                        }
                     } else {
-                        U256::zero()
-                    }
+                        let shift = shift.as_u32() as usize;
+                        let mut shifted = value >> shift;
+                        if sign {
+                            shifted = shifted | (U256::max_value() << (256 - shift));
+                        }
+                        shifted
+                    };
+                    self.stack.push(result);
+                }
+                Instruction::SHA3 => self.stack.two_items_op(|offset, length| {
+                    U256::ethfrom(hash::keccak(self.memory.read_slice(offset, length)))
                 }),
-                Instruction::AND => self.stack_two_items_op(|a, b| a & b),
-                Instruction::OR => self.stack_two_items_op(|a, b| a | b),
-                Instruction::XOR => self.stack_two_items_op(|a, b| a ^ b),
-                Instruction::NOT => self.stack_one_item_op(|a| !a),
-                Instruction::BYTE => {
-                    let i = self.stack.pop();
-                    let x = self.stack.pop();
-                    self.stack.push(U256::from(x.byte(i.as_usize())));
-                }
-                Instruction::SHL => self.stack_two_items_op(|shl, value| value << shl),
-                Instruction::SHR | Instruction::SAR => {
-                    self.stack_two_items_op(|shr, value| value >> shr)
-                }
-                Instruction::SHA3 => {
-                    let offset = self.stack.pop();
-                    let size = self.stack.pop();
-                    let k = hash::keccak(self.memory.read_slice(offset, size));
-                    self.stack.push(U256::ethfrom(k));
-                }
                 Instruction::ADDRESS => self.stack.push(ext.get_address()),
-                Instruction::BALANCE => {
-                    let address = Address::from_str(&self.stack.pop().to_string()).unwrap();
-                    self.stack.push(ext.get_balance(&address));
-                }
+                Instruction::BALANCE => self
+                    .stack
+                    .one_item_op(|addr| ext.get_balance(&Address::ethfrom(addr))),
                 Instruction::ORIGIN => self.stack.push(ext.get_origin()),
                 Instruction::CALLER => self.stack.push(ext.get_caller()),
                 Instruction::CALLVALUE => self.stack.push(ext.get_callvalue()),
-                Instruction::CALLDATALOAD => {
-                    let i = self.stack.pop();
-                    self.stack.push(ext.get_calldata(i));
-                }
+                Instruction::CALLDATALOAD => self.stack.one_item_op(|i| ext.get_calldata(i)),
                 Instruction::CALLDATASIZE => self.stack.push(ext.get_calldatasize()),
                 Instruction::CALLDATACOPY => {
                     let dest_offset = self.stack.pop();
@@ -139,10 +143,9 @@ impl VM {
                         .write_slice(dest_offset, ext.get_code_slice(offset, length));
                 }
                 Instruction::GASPRICE => self.stack.push(ext.get_gasprice()),
-                Instruction::EXTCODESIZE => {
-                    let address = Address::ethfrom(self.stack.pop());
-                    self.stack.push(ext.get_ext_codesize(&address))
-                }
+                Instruction::EXTCODESIZE => self
+                    .stack
+                    .one_item_op(|addr| ext.get_ext_codesize(&Address::ethfrom(addr))),
                 Instruction::EXTCODECOPY => {
                     let address = Address::ethfrom(self.stack.pop());
                     let dest_offset = self.stack.pop();
@@ -155,10 +158,9 @@ impl VM {
                 }
                 Instruction::RETURNDATASIZE => {}
                 Instruction::RETURNDATACOPY => {}
-                Instruction::EXTCODEHASH => {
-                    let address = Address::ethfrom(self.stack.pop());
-                    self.stack.push(ext.get_ext_code_hash(&address));
-                }
+                Instruction::EXTCODEHASH => self
+                    .stack
+                    .one_item_op(|addr| ext.get_ext_code_hash(&Address::ethfrom(addr))),
                 Instruction::BLOCKHASH => {}
                 Instruction::COINBASE => {}
                 Instruction::TIMESTAMP => {}
@@ -171,10 +173,7 @@ impl VM {
                 Instruction::POP => {
                     self.stack.pop();
                 }
-                Instruction::MLOAD => {
-                    let offset = self.stack.pop();
-                    self.stack.push(self.memory.read(offset));
-                }
+                Instruction::MLOAD => self.stack.one_item_op(|offset| self.memory.read(offset)),
                 Instruction::MSTORE => {
                     let offset = self.stack.pop();
                     let value = self.stack.pop();
@@ -185,13 +184,12 @@ impl VM {
                     let value = self.stack.pop();
                     self.memory.write_byte(offset, value);
                 }
-                Instruction::SLOAD => {
-                    let key = H256::from_uint(&self.stack.pop());
-                    self.stack.push(ext.get_storage(&key).into_uint());
-                }
+                Instruction::SLOAD => self
+                    .stack
+                    .one_item_op(|key| U256::ethfrom(ext.get_storage(&H256::ethfrom(key)))),
                 Instruction::SSTORE => {
-                    let key = H256::from_uint(&self.stack.pop());
-                    let value = H256::from_uint(&self.stack.pop());
+                    let key = H256::ethfrom(self.stack.pop());
+                    let value = H256::ethfrom(self.stack.pop());
                     ext.set_storage(key, value);
                 }
                 Instruction::JUMP => self.pc.jump(self.stack.pop()),
