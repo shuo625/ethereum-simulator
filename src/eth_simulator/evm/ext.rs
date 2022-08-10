@@ -8,7 +8,7 @@ use super::super::{
 };
 
 pub enum ExtError {
-    NotExistedAccount(Address),
+    NotExistedAddress(Address),
     NotExistedStorageKey,
 }
 
@@ -116,7 +116,7 @@ impl<'a> Ext<'a> {
 
         match self.accounts.get(address) {
             Some(account) => Ok(&account.get_code()[off..off + len]),
-            None => Err(ExtError::NotExistedAccount(address.clone())),
+            None => Err(ExtError::NotExistedAddress(address.clone())),
         }
     }
 
@@ -132,7 +132,7 @@ impl<'a> Ext<'a> {
     {
         match self.accounts.get(address) {
             Some(account) => Ok(f(account)),
-            None => Err(ExtError::NotExistedAccount(address.clone())),
+            None => Err(ExtError::NotExistedAddress(address.clone())),
         }
     }
 }
