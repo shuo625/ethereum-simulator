@@ -53,6 +53,23 @@ impl EthFrom<&str> for Vec<u8> {
     }
 }
 
+pub trait EthConvert {
+    fn to_sign(obj: Self) -> Self;
+}
+
+impl EthConvert for U256 {
+    fn to_sign(obj: Self) -> Self {
+        let U256(arr) = obj;
+        let sign = arr[3].leading_zeros() == 0;
+
+        if sign {
+            (!U256::zero() ^ obj).overflowing_add(U256::one()).0
+        } else {
+            obj
+        }
+    }
+}
+
 pub mod num_op {
     pub fn u8s_to_u8(a: u8, b: u8) -> u8 {
         (a << 4) | b
