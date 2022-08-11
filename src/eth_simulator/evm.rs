@@ -6,4 +6,4 @@ mod stack;
 mod vm;
 
 pub use ext::Ext;
-pub use vm::VM;
+pub use vm::{VMError, VMResult, VM};
