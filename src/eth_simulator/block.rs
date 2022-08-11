@@ -2,7 +2,7 @@ use super::{eth_types::H256, hash, tx::Tx};
 
 pub struct Block {
     tx: Tx,
-    tx_hash: H256,
+    block_hash: H256,
     prev_block_hash: H256,
 }
 
@@ -11,12 +11,12 @@ impl Block {
         let tx_hash = tx.hash();
         Block {
             tx,
-            tx_hash: tx_hash,
+            block_hash: hash::keccak(format!("{}{}", tx_hash, prev_block_hash)),
             prev_block_hash,
         }
     }
 
-    pub fn hash(&self) -> H256 {
-        hash::keccak(format!("{}{}", self.tx_hash, self.prev_block_hash))
+    pub fn get_hash(&self) -> H256 {
+        self.block_hash
     }
 }
