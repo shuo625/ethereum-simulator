@@ -3,6 +3,7 @@ use super::{
     hash,
 };
 
+#[derive(Clone)]
 pub struct Tx {
     from: Address,
     to: Address,
