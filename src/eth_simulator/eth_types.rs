@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use ethereum_types::BigEndianHash;
 pub use ethereum_types::{Address, Secret, H256, U256};
 
@@ -62,6 +64,16 @@ impl EthFrom<U256> for Address {
     fn ethfrom(obj: U256) -> Self {
         let addr: H256 = BigEndianHash::from_uint(&obj);
         Address::from(addr)
+    }
+}
+
+impl EthFrom<&str> for Address {
+    fn ethfrom(obj: &str) -> Self {
+        if obj.len() == 0 {
+            Address::zero()
+        } else {
+            Address::from_str(obj).unwrap()
+        }
     }
 }
 
