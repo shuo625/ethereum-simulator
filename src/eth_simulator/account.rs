@@ -3,7 +3,7 @@ mod storage;
 use self::storage::Storage;
 use super::{
     eth_types::{Address, Code, Secret, H256},
-    hash::keccak,
+    hash,
 };
 
 pub enum AccountError {
@@ -39,7 +39,7 @@ impl Account {
             private_key: Secret::random(),
             address: Address::random(),
             balance: 100,
-            code_hash: keccak(&code),
+            code_hash: hash::keccak(&code),
             code,
             storage: Storage::new(),
         }
@@ -72,6 +72,11 @@ impl Account {
 
     pub fn get_code(&self) -> &Code {
         &self.code
+    }
+
+    pub fn set_code(&mut self, code: Code) {
+        self.code = code;
+        self.code_hash = hash::keccak(&self.code);
     }
 
     pub fn set_storage(&mut self, key: H256, value: H256) {
