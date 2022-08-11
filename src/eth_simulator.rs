@@ -10,7 +10,7 @@ use self::{
     eth_types::{Address, EthFrom},
     state::{State, StateError},
 };
-use crate::api::{AccountInfo, EthApi, EthError};
+use crate::eth_api::{AccountInfo, EthApi, EthError};
 
 pub struct EthSimulator {
     state: State,

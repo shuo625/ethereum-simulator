@@ -3,7 +3,21 @@ pub mod cmd_errors;
 
 use std::io::{self, Write};
 
-use crate::state::State;
+use crate::eth_simulator::EthSimulator;
+
+pub struct Cli {
+    eth_simulator: EthSimulator,
+}
+
+impl Cli {
+    pub fn new() -> Self {
+        Cli {
+            eth_simulator: EthSimulator::new(),
+        }
+    }
+
+    pub fn run(&mut self) {}
+}
 
 pub fn cli_run() {
     let mut state = State::new();

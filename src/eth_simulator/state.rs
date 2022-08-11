@@ -99,7 +99,7 @@ impl State {
         }
     }
 
-    fn handle_tx_eoa_to_eoa(&self, tx: &Tx) -> Result<(), StateError> {
+    fn handle_tx_eoa_to_eoa(&mut self, tx: &Tx) -> Result<(), StateError> {
         let from = self.get_mut_account_by_address(tx.from())?;
         let to = self.get_mut_account_by_address(tx.to())?;
 
