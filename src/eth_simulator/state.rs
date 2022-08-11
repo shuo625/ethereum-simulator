@@ -1,14 +1,20 @@
 use serde_json::{self, Value};
 
-use std::{collections::HashMap, fs::File, io::BufReader, str::FromStr};
+use std::{collections::HashMap, fs::File, io::BufReader};
 
 use super::{
     account::Account,
     block::Block,
-    eth_types::{Address, Bytes, Code, EthFrom},
-    evm::{Ext, VM},
+    eth_types::{Address, Bytes, Code, EthFrom, H256},
+    evm::{Ext, VMError, VMResult, VM},
     tx::Tx,
 };
+
+pub enum StateError {
+    NotExistedAddress(Address),
+    NotEnoughBalance,
+    VMError(VMError),
+}
 
 pub struct State {
     accounts: HashMap<Address, Account>,
@@ -25,14 +31,12 @@ impl State {
         }
     }
 
-    /// This is the external api used by cmd
     pub fn account_add(&mut self, name: &str) {
         self.account_add_inner(name, Code::ethfrom(""));
     }
 
-    /// Return Vec<(name, address, balance)>
-    pub fn account_list(&self) -> Vec<(&str, &Address, u64)> {
-        let mut account_list: Vec<(&str, &Address, u64)> = Vec::new();
+    pub fn account_list(&self) -> Vec<(&str, &Address, usize)> {
+        let mut account_list: Vec<(&str, &Address, usize)> = Vec::new();
 
         for (k, v) in &self.accounts {
             account_list.push((v.get_name(), k, v.get_balance()));
@@ -41,24 +45,23 @@ impl State {
         account_list
     }
 
-    pub fn account_get_balance(&self, address: &str) -> Option<u64> {
-        let addr = Address::from_str(address).unwrap();
-        match self.accounts.get(&addr) {
-            Some(account) => Some(account.get_balance()),
-            None => None,
+    pub fn account_get_balance(&self, address: &Address) -> Result<usize, StateError> {
+        match self.accounts.get(address) {
+            Some(account) => Ok(account.get_balance()),
+            None => Err(StateError::NotExistedAddress(address.clone())),
         }
     }
 
-    pub fn tx_send(&mut self, params_file: &str) {
+    pub fn tx_send(&mut self, params_file: &str) -> Result<(), StateError> {
         let params: Value =
             serde_json::from_reader(BufReader::new(File::open(params_file).unwrap())).unwrap();
         let tx = Tx::new(
-            Address::from_str(&params["from"].to_string()).unwrap(),
-            Address::from_str(&params["to"].to_string()).unwrap(),
-            params["value"].to_string().parse::<u64>().unwrap(),
+            Address::ethfrom(&params["from"].to_string()),
+            Address::ethfrom(&params["to"].to_string()),
+            params["value"].to_string().parse::<usize>().unwrap(),
             Bytes::ethfrom(&params["data"].to_string()),
         );
-        self.handle_tx(&tx);
+
         self.txs.push(tx);
         self.mine()
     }
@@ -71,77 +74,80 @@ impl State {
         address
     }
 
-    fn get_account_by_address(&self, address: &Address) -> &Account {
-        self.accounts.get(&address).unwrap()
+    fn get_account_by_address(&self, address: &Address) -> Result<&Account, StateError> {
+        self.accounts
+            .get(address)
+            .ok_or(StateError::NotExistedAddress(address.clone()))
     }
 
-    fn get_mut_account_by_address(&mut self, address: &Address) -> &mut Account {
-        self.accounts.get_mut(&address).unwrap()
+    fn get_mut_account_by_address(
+        &mut self,
+        address: &Address,
+    ) -> Result<&mut Account, StateError> {
+        self.accounts
+            .get_mut(address)
+            .ok_or(StateError::NotExistedAddress(address.clone()))
     }
 
-    fn handle_tx(&mut self, tx: &Tx) {
-        if tx.to().to_string() == "" {
-            self.handle_tx_deploy_contract(tx);
+    fn handle_tx(&mut self, tx: &Tx) -> Result<(), StateError> {
+        if tx.to().is_zero() {
+            self.handle_tx_deploy_contract(tx)
         } else if tx.data().len() == 0 {
-            self.handle_tx_eoa_to_eoa(tx);
+            self.handle_tx_eoa_to_eoa(tx)
         } else {
-            self.handle_tx_call_contract(tx);
+            self.handle_tx_call_contract(tx)
         }
     }
 
-    fn handle_tx_eoa_to_eoa(&self, tx: &Tx) {}
+    fn handle_tx_eoa_to_eoa(&self, tx: &Tx) -> Result<(), StateError> {
+        let from = self.get_mut_account_by_address(tx.from())?;
+        let to = self.get_mut_account_by_address(tx.to())?;
 
-    fn handle_tx_deploy_contract(&mut self, tx: &Tx) {
-        let address = self.account_add_inner("Contract", tx.data().clone());
-        let account = self.get_account_by_address(&address);
-        let mut vm = VM::new(account.get_code().clone());
-        let mut ext = Ext::new(address, &mut self.accounts, tx);
-        vm.execute(&mut ext);
+        match from.sub_balance(tx.value()) {
+            Ok(_) => {
+                to.add_balance(tx.value());
+                Ok(())
+            }
+            Err(_) => Err(StateError::NotEnoughBalance),
+        }
     }
 
-    fn handle_tx_call_contract(&self, tx: &Tx) {}
+    fn handle_tx_deploy_contract(&mut self, tx: &Tx) -> Result<(), StateError> {
+        let address = self.account_add_inner("Contract", tx.data().clone());
+        let account = self.get_account_by_address(&address).unwrap_unchecked();
+        let mut vm = VM::new(account.get_code().clone());
+        let mut ext = Ext::new(address, &mut self.accounts, tx);
 
-    fn mine(&mut self) {
-        let last_tx = self.txs.last().unwrap();
-        self.handle_tx(last_tx);
+        match vm.execute(&mut ext) {
+            Ok(vm_result) => match vm_result {
+                VMResult::Ok | VMResult::Stop => Ok(()),
+                VMResult::Return(bytes) => {
+                    account.set_code(bytes);
+                    Ok(())
+                }
+            },
+            Err(err) => Err(StateError::VMError(err)),
+        }
+    }
 
-        if let Some(from_account) = self.accounts.get_mut(last_tx.from()) {
-            // if from exists
-            match from_account.sub_balance(last_tx.value()) {
-                Ok(_) => {
-                    // balance of from is enough
-                    if let Some(to_account) = self.accounts.get_mut(last_tx.to()) {
-                        // if to exists
-                        to_account.add_balance(last_tx.value());
-                        // mine tx
-                        if self.blocks.is_empty() {
-                            self.blocks.push(Block::new(
-                                last_tx.clone(),
-                                String::from("0000000000000000000000000000000000000000000000000000000000000000"),
-                            ));
-                        } else {
-                            self.blocks.push(Block::new(
-                                last_tx.clone(),
-                                self.blocks.last().unwrap().hash(),
-                            ))
-                        }
-                        Ok(())
-                    } else {
-                        // to does not exist
-                        self.txs.pop();
-                        Err(CmdTxErrCode::NOTEXISTEDTO)
-                    }
-                }
-                err => {
-                    // balance of from is not enough
-                    self.txs.pop();
-                    err
-                }
+    fn handle_tx_call_contract(&self, tx: &Tx) -> Result<(), StateError> {
+        Ok(())
+    }
+
+    fn mine(&mut self) -> Result<(), StateError> {
+        let last_tx = self.txs.last().unwrap_unchecked().clone();
+
+        match self.handle_tx(&last_tx) {
+            Ok(_) => {
+                let prev_block_hash = if self.blocks.len() == 0 {
+                    H256::zero()
+                } else {
+                    self.blocks.last().unwrap_unchecked().get_hash()
+                };
+                self.blocks.push(Block::new(last_tx, prev_block_hash));
+                Ok(())
             }
-        } else {
-            // from does not exist
-            self.txs.pop();
-            Err(CmdTxErrCode::NOTEXISTEDFROM)
+            Err(err) => Err(err),
         }
     }
 }
