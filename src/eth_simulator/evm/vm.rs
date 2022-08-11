@@ -1,5 +1,7 @@
 use core::panic;
 
+use serde_json::de;
+
 use super::{
     super::{
         eth_types::{Address, Bytes, Code, EthFrom, EthSign, U256},
@@ -18,11 +20,13 @@ pub enum VMResult {
     Return(Bytes),
 }
 
+#[derive(Debug)]
 pub enum VMErrorKind {
     NotExistedAddress(Address),
     NotExistedStorageKey,
 }
 
+#[derive(Debug)]
 pub struct VMError {
     pub instruction: Instruction,
     pub pc: usize,

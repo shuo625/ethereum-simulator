@@ -1,5 +1,6 @@
 use super::super::eth_types::U256;
 
+#[derive(Debug)]
 pub enum Instruction {
     STOP,
     ADD,
