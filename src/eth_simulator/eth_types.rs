@@ -77,6 +77,16 @@ impl EthFrom<&str> for Address {
     }
 }
 
+impl EthFrom<&String> for Address {
+    fn ethfrom(obj: &String) -> Self {
+        if obj.len() == 0 {
+            Address::zero()
+        } else {
+            Address::from_str(obj).unwrap()
+        }
+    }
+}
+
 impl EthFrom<&str> for Vec<u8> {
     fn ethfrom(obj: &str) -> Self {
         let mut v: Vec<u8> = Vec::new();
