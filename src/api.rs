@@ -19,3 +19,21 @@ pub trait EthApi {
 
     fn tx_send(&mut self, params_file: &str) -> Result<(), EthError>;
 }
+
+pub enum Api {
+    Cli(cli::Cli),
+    Rpc(rpc::Rpc),
+    None,
+}
+
+impl Api {
+    pub fn new(arg: &str) -> Self {
+        if arg == "cli" {
+            Api::Cli(cli::Cli::new())
+        } else if arg == "rpc" {
+            Api::Rpc(rpc::Rpc::new())
+        } else {
+            Api::None
+        }
+    }
+}
