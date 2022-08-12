@@ -50,6 +50,7 @@ impl EthApi for EthSimulator {
 
                 Err(EthError::NotExistedAddress)
             }
+            Err(_) => Err(EthError::NotExistedAddress),
         }
     }
 
