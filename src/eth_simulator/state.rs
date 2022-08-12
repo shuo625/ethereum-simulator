@@ -10,6 +10,7 @@ use super::{
     tx::Tx,
 };
 
+#[derive(Debug)]
 pub enum StateError {
     NotExistedAddress(Address),
     NotEnoughBalance,
@@ -101,10 +102,10 @@ impl State {
 
     fn handle_tx_eoa_to_eoa(&mut self, tx: &Tx) -> Result<(), StateError> {
         let from = self.get_mut_account_by_address(tx.from())?;
-        let to = self.get_mut_account_by_address(tx.to())?;
 
         match from.sub_balance(tx.value()) {
             Ok(_) => {
+                let to = self.get_mut_account_by_address(tx.to())?;
                 to.add_balance(tx.value());
                 Ok(())
             }
@@ -114,14 +115,14 @@ impl State {
 
     fn handle_tx_deploy_contract(&mut self, tx: &Tx) -> Result<(), StateError> {
         let address = self.account_add_inner("Contract", tx.data().clone());
-        let account = self.get_account_by_address(&address).unwrap_unchecked();
-        let mut vm = VM::new(account.get_code().clone());
+        let mut vm = VM::new(self.accounts.get(&address).unwrap().get_code().clone());
         let mut ext = Ext::new(address, &mut self.accounts, tx);
 
         match vm.execute(&mut ext) {
             Ok(vm_result) => match vm_result {
                 VMResult::Ok | VMResult::Stop => Ok(()),
                 VMResult::Return(bytes) => {
+                    let account = self.get_mut_account_by_address(&address).unwrap();
                     account.set_code(bytes);
                     Ok(())
                 }
@@ -135,14 +136,14 @@ impl State {
     }
 
     fn mine(&mut self) -> Result<(), StateError> {
-        let last_tx = self.txs.last().unwrap_unchecked().clone();
+        let last_tx = self.txs.last().unwrap().clone();
 
         match self.handle_tx(&last_tx) {
             Ok(_) => {
                 let prev_block_hash = if self.blocks.len() == 0 {
                     H256::zero()
                 } else {
-                    self.blocks.last().unwrap_unchecked().get_hash()
+                    self.blocks.last().unwrap().get_hash()
                 };
                 self.blocks.push(Block::new(last_tx, prev_block_hash));
                 Ok(())
