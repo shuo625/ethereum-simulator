@@ -1,7 +1,5 @@
 use core::panic;
 
-use serde_json::de;
-
 use super::{
     super::{
         eth_types::{Address, Bytes, Code, EthFrom, EthSign, U256},
@@ -190,6 +188,7 @@ impl VM {
                                     error_kind: VMErrorKind::NotExistedAddress(address),
                                 })
                             }
+                            _ => {}
                         },
                     }
                 }

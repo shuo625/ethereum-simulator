@@ -7,6 +7,7 @@ use super::super::{
     tx::Tx,
 };
 
+#[derive(Debug)]
 pub enum ExtError {
     NotExistedAddress(Address),
     NotExistedStorageKey,
@@ -94,12 +95,12 @@ impl<'a> Ext<'a> {
     }
 
     pub fn get_codesize(&self) -> U256 {
-        self.get_ext_codesize(&self.account).unwrap_unchecked()
+        self.get_ext_codesize(&self.account).unwrap()
     }
 
     pub fn get_code_slice(&self, offset: U256, length: U256) -> &[u8] {
         self.get_ext_code_slice(&self.account, offset, length)
-            .unwrap_unchecked()
+            .unwrap()
     }
 
     pub fn get_gasprice(&self) -> U256 {
