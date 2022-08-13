@@ -27,17 +27,36 @@ impl Memory {
 
     pub fn write(&mut self, offset: U256, value: U256) {
         let off = offset.as_usize();
+
+        if self.memory.len() < off + 32 {
+            self.resize(off + 32);
+        }
+
         value.to_big_endian(&mut self.memory[off..off + 32]);
     }
 
     pub fn write_slice(&mut self, offset: U256, value: &[u8]) {
         let off = offset.as_usize();
+
+        if self.memory.len() < off + value.len() {
+            self.resize(off + value.len());
+        }
+
         self.memory[off..off + value.len()].copy_from_slice(value);
     }
 
     pub fn write_byte(&mut self, offset: U256, value: U256) {
         let off = offset.as_usize();
+
+        if self.memory.len() < off + 1 {
+            self.resize(off + 1);
+        }
+
         let val = value.low_u64() as u8;
         self.memory[off] = val;
+    }
+
+    fn resize(&mut self, size: usize) {
+        self.memory.resize(size, 0);
     }
 }
