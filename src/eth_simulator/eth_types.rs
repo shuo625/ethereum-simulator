@@ -1,3 +1,5 @@
+use serde_json::Value;
+
 use std::{fmt::Write, str::FromStr};
 
 use ethereum_types::BigEndianHash;
@@ -123,6 +125,17 @@ impl EthFrom<&Address> for String {
         }
 
         s
+    }
+}
+
+impl EthFrom<&Value> for String {
+    fn ethfrom(obj: &Value) -> Self {
+        obj.to_string()
+            .strip_prefix('"')
+            .unwrap()
+            .strip_suffix('"')
+            .unwrap()
+            .to_string()
     }
 }
 

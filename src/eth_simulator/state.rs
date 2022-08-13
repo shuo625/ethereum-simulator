@@ -57,10 +57,10 @@ impl State {
         let params: Value =
             serde_json::from_reader(BufReader::new(File::open(params_file).unwrap())).unwrap();
         let tx = Tx::new(
-            Address::ethfrom(params["from"].to_string()),
-            Address::ethfrom(params["to"].to_string()),
-            params["value"].to_string().parse::<usize>().unwrap(),
-            Bytes::ethfrom(&params["data"].to_string()),
+            Address::ethfrom(String::ethfrom(&params["from"])),
+            Address::ethfrom(String::ethfrom(&params["to"])),
+            String::ethfrom(&params["value"]).parse::<usize>().unwrap(),
+            Bytes::ethfrom(&String::ethfrom(&params["data"])),
         );
 
         self.txs.push(tx);
