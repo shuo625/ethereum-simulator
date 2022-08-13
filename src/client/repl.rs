@@ -23,7 +23,7 @@ impl<'a> REPL<'a> {
                 "add account",
                 (name: String) => |name: String| {
                     let mut eth_simulator = eth_simulator_clone.lock().unwrap();
-                    REPL::account_add(&mut *eth_simulator, name);
+                    Self::account_add(&mut *eth_simulator, name);
                     Ok(CommandStatus::Done)
                 }
             },
@@ -36,7 +36,7 @@ impl<'a> REPL<'a> {
                 "list accounts",
                 () => || {
                     let mut eth_simulator = eth_simulator_clone.lock().unwrap();
-                    REPL::account_list(&*eth_simulator);
+                    Self::account_list(&*eth_simulator);
                     Ok(CommandStatus::Done)
                 }
             },
@@ -49,7 +49,7 @@ impl<'a> REPL<'a> {
                 "get account balance",
                 (address: String) => |address: String| {
                     let mut eth_simulator = eth_simulator_clone.lock().unwrap();
-                    REPL::account_balance(&*eth_simulator, address);
+                    Self::account_balance(&*eth_simulator, address);
                     Ok(CommandStatus::Done)
                 }
             },
@@ -62,7 +62,7 @@ impl<'a> REPL<'a> {
                 "send transaction",
                 (params_file: String) => |params_file: String| {
                     let mut eth_simulator = eth_simulator_clone.lock().unwrap();
-                    REPL::tx_send(&mut *eth_simulator, params_file);
+                    Self::tx_send(&mut *eth_simulator, params_file);
                     Ok(CommandStatus::Done)
                 }
             },
