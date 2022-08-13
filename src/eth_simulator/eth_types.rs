@@ -94,6 +94,10 @@ impl EthFrom<&str> for Vec<u8> {
         let mut idx: usize = 0;
         let bytes = obj.as_bytes();
 
+        if bytes.len() < 2 {
+            return v;
+        }
+
         while idx < bytes.len() - 1 {
             let byte_part_a = bytes[idx] - b'0';
             let byte_part_b = bytes[idx + 1] - b'0';
