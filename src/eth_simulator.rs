@@ -6,6 +6,8 @@ mod hash;
 mod state;
 mod tx;
 
+use std::path::PathBuf;
+
 use self::{
     eth_types::{Address, EthFrom},
     state::{State, StateError},
@@ -54,7 +56,7 @@ impl EthApi for EthSimulator {
         }
     }
 
-    fn tx_send(&mut self, params_file: &str) -> Result<(), EthError> {
+    fn tx_send(&mut self, params_file: PathBuf) -> Result<(), EthError> {
         match self.state.tx_send(params_file) {
             Ok(_) => Ok(()),
             Err(err) => match err {

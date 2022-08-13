@@ -1,6 +1,6 @@
 use serde_json::{self, Value};
 
-use std::{collections::HashMap, fs::File, io::BufReader};
+use std::{collections::HashMap, fs::File, io::BufReader, path::PathBuf};
 
 use super::{
     account::Account,
@@ -53,7 +53,7 @@ impl State {
         }
     }
 
-    pub fn tx_send(&mut self, params_file: &str) -> Result<(), StateError> {
+    pub fn tx_send(&mut self, params_file: PathBuf) -> Result<(), StateError> {
         let params: Value =
             serde_json::from_reader(BufReader::new(File::open(params_file).unwrap())).unwrap();
         let tx = Tx::new(

@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 pub struct AccountInfo {
     pub name: String,
     pub address: String,
@@ -14,5 +16,5 @@ pub trait EthApi {
     fn account_list(&self) -> Vec<AccountInfo>;
     fn account_balance(&self, address: &str) -> Result<usize, EthError>;
 
-    fn tx_send(&mut self, params_file: &str) -> Result<(), EthError>;
+    fn tx_send(&mut self, params_file: PathBuf) -> Result<(), EthError>;
 }
