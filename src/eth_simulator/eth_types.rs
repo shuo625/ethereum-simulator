@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{fmt::Write, str::FromStr};
 
 use ethereum_types::BigEndianHash;
 pub use ethereum_types::{Address, Secret, H256, U256};
@@ -77,12 +77,12 @@ impl EthFrom<&str> for Address {
     }
 }
 
-impl EthFrom<&String> for Address {
-    fn ethfrom(obj: &String) -> Self {
+impl EthFrom<String> for Address {
+    fn ethfrom(obj: String) -> Self {
         if obj.len() == 0 {
             Address::zero()
         } else {
-            Address::from_str(obj).unwrap()
+            Address::from_str(&obj).unwrap()
         }
     }
 }
@@ -112,6 +112,17 @@ impl EthFrom<&str> for Vec<u8> {
 impl EthFrom<U256> for H256 {
     fn ethfrom(obj: U256) -> Self {
         H256::from_uint(&obj)
+    }
+}
+
+impl EthFrom<&Address> for String {
+    fn ethfrom(obj: &Address) -> Self {
+        let mut s = String::from("0x");
+        for byte in obj.as_bytes() {
+            write!(&mut s, "{:02x}", byte).unwrap();
+        }
+
+        s
     }
 }
 

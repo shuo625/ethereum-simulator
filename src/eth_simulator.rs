@@ -37,7 +37,7 @@ impl EthApi for EthSimulator {
             .iter()
             .map(|(name, address, balance)| AccountInfo {
                 name: name.to_string(),
-                address: address.to_string(),
+                address: String::ethfrom(address),
                 balance: *balance,
             })
             .collect()
