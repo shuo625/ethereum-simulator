@@ -57,9 +57,9 @@ impl<'a> REPL<'a> {
 
         eth_simulator_clone = eth_simulator.clone();
         repl = repl.add(
-            "account_balance",
+            "tx_send",
             command! {
-                "get account balance",
+                "send transaction",
                 (params_file: String) => |params_file: String| {
                     let mut eth_simulator = eth_simulator_clone.lock().unwrap();
                     REPL::tx_send(&mut *eth_simulator, params_file);
