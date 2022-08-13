@@ -10,4 +10,6 @@ impl Rpc {
             eth_simulator: EthSimulator::new(),
         }
     }
+
+    pub fn run(self) {}
 }

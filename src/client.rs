@@ -1,12 +1,12 @@
 mod repl;
 mod rpc;
 
-pub enum Client {
-    REPL(repl::REPL),
+pub enum Client<'a> {
+    REPL(repl::REPL<'a>),
     Rpc(rpc::Rpc),
 }
 
-impl Client {
+impl<'a> Client<'a> {
     pub fn new(arg: &str) -> Option<Self> {
         match arg {
             "REPL" => Some(Self::REPL(repl::REPL::new())),
@@ -17,8 +17,8 @@ impl Client {
 
     pub fn run(self) {
         match self {
-            Self::REPL(repl) => repl.run(),
-            Self::Rpc(rpc) => rpc.run(),
+            Self::REPL(mut repl) => repl.run(),
+            Self::Rpc(mut rpc) => rpc.run(),
         }
     }
 }
