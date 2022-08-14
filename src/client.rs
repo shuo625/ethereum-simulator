@@ -10,7 +10,7 @@ impl<'a> Client<'a> {
     pub fn new(arg: &str) -> Option<Self> {
         match arg {
             "REPL" => Some(Self::REPL(repl::REPL::new())),
-            "Rpc" => Some(Self::Rpc(rpc::Rpc::new())),
+            "Rpc" => Some(Self::Rpc(rpc::Rpc::new("127.0.0.1:8000"))),
             _ => None,
         }
     }
