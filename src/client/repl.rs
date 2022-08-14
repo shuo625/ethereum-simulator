@@ -4,6 +4,7 @@ use serde_json;
 
 use std::{fs::File, io::BufReader, rc::Rc, sync::Mutex};
 
+use super::Client;
 use crate::{
     eth_api::{EthApi, EthError},
     eth_simulator::EthSimulator,
@@ -11,6 +12,12 @@ use crate::{
 
 pub struct REPL<'a> {
     repl: Repl<'a>,
+}
+
+impl Client for REPL<'_> {
+    fn run(&mut self) {
+        self.repl.run().expect("Critical REPL error");
+    }
 }
 
 impl<'a> REPL<'a> {
@@ -73,10 +80,6 @@ impl<'a> REPL<'a> {
         REPL {
             repl: repl.build().expect("Failed to create repl"),
         }
-    }
-
-    pub fn run(&mut self) {
-        self.repl.run().expect("Critical REPL error");
     }
 
     fn account_add(eth_simulator: &mut EthSimulator, name: String) {

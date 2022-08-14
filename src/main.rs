@@ -1,28 +1,29 @@
-use clap::{Parser, ValueEnum};
-use ethereum_simulator::Client;
+use clap::{Parser, Subcommand};
+use ethereum_simulator::{Client, Rpc, REPL};
 
 fn main() {
-    let args = Args::parse();
+    let cli = Cli::parse();
 
-    let client = Client::new(&args.mode.to_string()).unwrap();
+    let mut client: Box<dyn Client> = match &cli.command {
+        Commands::REPL => Box::new(REPL::new()),
+        Commands::Rpc { socket } => Box::new(Rpc::new(&socket)),
+    };
     client.run();
 }
 
 #[derive(Parser)]
-#[clap(version)]
-struct Args {
-    #[clap(short, long, arg_enum, value_parser)]
-    mode: Mode,
+#[clap(author, version)]
+#[clap(propagate_version = true)]
+struct Cli {
+    #[clap(subcommand)]
+    command: Commands,
 }
 
-#[derive(ValueEnum, Debug, Clone)]
-enum Mode {
+#[derive(Subcommand)]
+enum Commands {
     REPL,
-    Rpc,
-}
-
-impl std::fmt::Display for Mode {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
+    Rpc {
+        #[clap(value_parser)]
+        socket: String,
+    },
 }

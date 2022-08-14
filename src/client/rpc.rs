@@ -7,6 +7,7 @@ use std::{
     net::{TcpListener, TcpStream},
 };
 
+use super::Client;
 use crate::{eth_api::EthApi, eth_simulator::EthSimulator};
 
 #[derive(Deserialize, Debug)]
@@ -25,15 +26,8 @@ pub struct Rpc {
     socket: String,
 }
 
-impl Rpc {
-    pub fn new(socket: &str) -> Self {
-        Rpc {
-            server: TcpListener::bind(socket).unwrap(),
-            socket: socket.to_string(),
-        }
-    }
-
-    pub fn run(&mut self) {
+impl Client for Rpc {
+    fn run(&mut self) {
         println!("rpc server listens at {}", self.socket);
 
         let mut eth_simulator = EthSimulator::new();
@@ -42,6 +36,15 @@ impl Rpc {
             let stream = stream.unwrap();
 
             Self::handle_connection(&mut eth_simulator, stream);
+        }
+    }
+}
+
+impl Rpc {
+    pub fn new(socket: &str) -> Self {
+        Rpc {
+            server: TcpListener::bind(socket).unwrap(),
+            socket: socket.to_string(),
         }
     }
 
