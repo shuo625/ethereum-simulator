@@ -107,7 +107,7 @@ impl<'a> REPL<'a> {
     fn tx_send(eth_simulator: &mut EthSimulator, params_file: String) {
         if let Ok(file) = File::open(params_file) {
             if let Ok(tx) = serde_json::from_reader::<BufReader<File>, Tx>(BufReader::new(file)) {
-                match eth_simulator.tx_send(tx.from, tx.to, tx.value, tx.data) {
+                match eth_simulator.tx_send(&tx.from, &tx.to, tx.value, &tx.data) {
                     Ok(_) => {}
                     Err(err) => match err {
                         EthError::NotExistedAddress => println!("some address does not exist"),
