@@ -32,8 +32,8 @@ impl State {
         }
     }
 
-    pub fn account_add(&mut self, name: &str) {
-        self.account_add_inner(name, Code::ethfrom(""));
+    pub fn account_add(&mut self, name: &str) -> Address {
+        self.account_add_inner(name, Code::ethfrom(""))
     }
 
     pub fn account_list(&self) -> Vec<(&str, &Address, usize)> {

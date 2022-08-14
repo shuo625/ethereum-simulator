@@ -12,7 +12,7 @@ pub enum EthError {
     VMError,
 }
 pub trait EthApi {
-    fn account_add(&mut self, name: &str);
+    fn account_add(&mut self, name: &str) -> String;
     fn account_list(&self) -> Vec<AccountInfo>;
     fn account_balance(&self, address: &str) -> Result<usize, EthError>;
 

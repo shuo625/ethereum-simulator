@@ -27,8 +27,9 @@ impl EthSimulator {
 }
 
 impl EthApi for EthSimulator {
-    fn account_add(&mut self, name: &str) {
-        self.state.account_add(name);
+    fn account_add(&mut self, name: &str) -> String {
+        let address = self.state.account_add(name);
+        String::ethfrom(&address)
     }
 
     fn account_list(&self) -> Vec<AccountInfo> {
