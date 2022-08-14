@@ -1,6 +1,8 @@
 use easy_repl::{command, CommandStatus, Repl};
+use serde::Deserialize;
+use serde_json;
 
-use std::{rc::Rc, sync::Mutex};
+use std::{fs::File, io::BufReader, rc::Rc, sync::Mutex};
 
 use crate::{
     eth_api::{EthApi, EthError},
@@ -103,13 +105,30 @@ impl<'a> REPL<'a> {
     }
 
     fn tx_send(eth_simulator: &mut EthSimulator, params_file: String) {
-        match eth_simulator.tx_send(params_file.into()) {
-            Ok(_) => {}
-            Err(err) => match err {
-                EthError::NotExistedAddress => println!("some address does not exist"),
-                EthError::NotEnoughBalance => println!("balance is not enough"),
-                EthError::VMError => println!("there is a vm error"),
-            },
+        if let Ok(file) = File::open(params_file) {
+            if let Ok(tx) = serde_json::from_reader::<BufReader<File>, Tx>(BufReader::new(file)) {
+                match eth_simulator.tx_send(tx.from, tx.to, tx.value, tx.data) {
+                    Ok(_) => {}
+                    Err(err) => match err {
+                        EthError::NotExistedAddress => println!("some address does not exist"),
+                        EthError::NotEnoughBalance => println!("balance is not enough"),
+                        EthError::VMError => println!("there is a vm error"),
+                    },
+                }
+            } else {
+                println!("wrong file format, failed to deserialize file")
+            }
+        } else {
+            println!("failed to open the file, check the path of file")
         }
     }
+}
+
+/// Tx struct for serde json deserialize
+#[derive(Deserialize)]
+struct Tx {
+    from: String,
+    to: String,
+    value: usize,
+    data: String,
 }
