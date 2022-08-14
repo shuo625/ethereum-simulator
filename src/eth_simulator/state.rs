@@ -1,11 +1,9 @@
-use serde_json::{self, Value};
-
-use std::{collections::HashMap, fs::File, io::BufReader, path::PathBuf};
+use std::collections::HashMap;
 
 use super::{
     account::Account,
     block::Block,
-    eth_types::{Address, Bytes, Code, EthFrom, H256},
+    eth_types::{Address, Code, EthFrom, H256},
     evm::{Ext, VMError, VMResult, VM},
     tx::Tx,
 };
