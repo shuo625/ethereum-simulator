@@ -56,18 +56,12 @@ impl EthApi for EthSimulator {
         }
     }
 
-    fn tx_send(
-        &mut self,
-        from: String,
-        to: String,
-        value: usize,
-        data: String,
-    ) -> Result<(), EthError> {
+    fn tx_send(&mut self, from: &str, to: &str, value: usize, data: &str) -> Result<(), EthError> {
         match self.state.tx_send(Tx::new(
             Address::ethfrom(from),
             Address::ethfrom(to),
             value,
-            Bytes::ethfrom(&data),
+            Bytes::ethfrom(data),
         )) {
             Ok(_) => Ok(()),
             Err(err) => match err {
