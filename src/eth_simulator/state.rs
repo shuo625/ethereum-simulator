@@ -53,16 +53,7 @@ impl State {
         }
     }
 
-    pub fn tx_send(&mut self, params_file: PathBuf) -> Result<(), StateError> {
-        let params: Value =
-            serde_json::from_reader(BufReader::new(File::open(params_file).unwrap())).unwrap();
-        let tx = Tx::new(
-            Address::ethfrom(String::ethfrom(&params["from"])),
-            Address::ethfrom(String::ethfrom(&params["to"])),
-            String::ethfrom(&params["value"]).parse::<usize>().unwrap(),
-            Bytes::ethfrom(&String::ethfrom(&params["data"])),
-        );
-
+    pub fn tx_send(&mut self, tx: Tx) -> Result<(), StateError> {
         self.txs.push(tx);
         self.mine()
     }

@@ -6,11 +6,10 @@ mod hash;
 mod state;
 mod tx;
 
-use std::path::PathBuf;
-
 use self::{
-    eth_types::{Address, EthFrom},
+    eth_types::{Address, Bytes, EthFrom},
     state::{State, StateError},
+    tx::Tx,
 };
 use crate::eth_api::{AccountInfo, EthApi, EthError};
 
@@ -57,8 +56,19 @@ impl EthApi for EthSimulator {
         }
     }
 
-    fn tx_send(&mut self, params_file: PathBuf) -> Result<(), EthError> {
-        match self.state.tx_send(params_file) {
+    fn tx_send(
+        &mut self,
+        from: String,
+        to: String,
+        value: usize,
+        data: String,
+    ) -> Result<(), EthError> {
+        match self.state.tx_send(Tx::new(
+            Address::ethfrom(from),
+            Address::ethfrom(to),
+            value,
+            Bytes::ethfrom(&data),
+        )) {
             Ok(_) => Ok(()),
             Err(err) => match err {
                 StateError::NotExistedAddress(address) => {

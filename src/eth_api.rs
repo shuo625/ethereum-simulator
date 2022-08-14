@@ -1,5 +1,6 @@
-use std::path::PathBuf;
+use serde::Serialize;
 
+#[derive(Serialize)]
 pub struct AccountInfo {
     pub name: String,
     pub address: String,
@@ -16,5 +17,11 @@ pub trait EthApi {
     fn account_list(&self) -> Vec<AccountInfo>;
     fn account_balance(&self, address: &str) -> Result<usize, EthError>;
 
-    fn tx_send(&mut self, params_file: PathBuf) -> Result<(), EthError>;
+    fn tx_send(
+        &mut self,
+        from: String,
+        to: String,
+        value: usize,
+        data: String,
+    ) -> Result<(), EthError>;
 }
