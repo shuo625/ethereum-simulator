@@ -5,6 +5,8 @@ use std::{
     collections::HashMap,
     io::{BufReader, Write},
     net::{TcpListener, TcpStream},
+    sync::{Arc, Mutex},
+    thread,
 };
 
 use super::Client;
@@ -30,12 +32,18 @@ impl Client for Rpc {
     fn run(&mut self) {
         println!("rpc server listens at {}", self.socket);
 
-        let mut eth_simulator = EthSimulator::new();
+        let eth_simulator = Arc::new(Mutex::new(EthSimulator::new()));
 
         for stream in self.server.incoming() {
             let stream = stream.unwrap();
+            let eth_simulator_clone = eth_simulator.clone();
 
-            Self::handle_connection(&mut eth_simulator, stream);
+            println!("New connection: {}", stream.peer_addr().unwrap());
+
+            thread::spawn(move || {
+                let mut eth_simulator = eth_simulator_clone.lock().unwrap();
+                Self::handle_connection(&mut eth_simulator, stream);
+            });
         }
     }
 }
