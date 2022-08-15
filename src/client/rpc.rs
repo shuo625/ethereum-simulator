@@ -3,7 +3,7 @@ use serde_json::{self, json, Value};
 
 use std::{
     collections::HashMap,
-    io::{BufReader, Write},
+    io::Write,
     net::{TcpListener, TcpStream},
     sync::{Arc, Mutex},
     thread,
@@ -60,9 +60,8 @@ impl Rpc {
         let mut status = "ok";
         let mut result = Value::Null;
 
-        if let Ok(request) = serde_json::from_reader::<BufReader<&mut TcpStream>, Request>(
-            BufReader::new(&mut stream),
-        ) {
+        let mut de = serde_json::Deserializer::from_reader(&stream);
+        if let Ok(request) = Request::deserialize(&mut de) {
             println!("receive request {:?}", request);
 
             match Self::handle_request(eth_simulator, request) {
