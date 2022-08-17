@@ -83,6 +83,12 @@ impl EthApi for EthSimulator {
 
                     Err(EthError::VMError)
                 }
+                StateError::CALLEOAACCOUNT => {
+                    #[cfg(debug_assertions)]
+                    println!("to address is not contract");
+
+                    Err(EthError::CALLEOAACCOUNT)
+                }
             },
         }
     }
