@@ -3,9 +3,9 @@ use std::collections::HashMap;
 use super::{
     account::Account,
     block::Block,
-    eth_types::{Address, Code, EthFrom, H256},
+    eth_types::{Address, Bytes, Code, EthFrom, H256},
     evm::{Ext, VMError, VMResult, VM},
-    tx::Tx,
+    tx::{Tx, TxType},
 };
 
 #[derive(Debug)]
@@ -13,6 +13,7 @@ pub enum StateError {
     NotExistedAddress(Address),
     NotEnoughBalance,
     VMError(VMError),
+    CALLEOAACCOUNT,
 }
 
 pub struct State {
@@ -79,49 +80,61 @@ impl State {
             .ok_or(StateError::NotExistedAddress(address.clone()))
     }
 
-    fn handle_tx(&mut self, tx: &Tx) -> Result<(), StateError> {
-        if tx.to().is_zero() {
-            self.handle_tx_deploy_contract(tx)
-        } else if tx.data().len() == 0 {
-            self.handle_tx_eoa_to_eoa(tx)
-        } else {
-            self.handle_tx_call_contract(tx)
+    fn handle_tx(&mut self, tx: &Tx) -> Result<Option<Bytes>, StateError> {
+        match tx.tx_type() {
+            TxType::EoaToEoa => self.handle_tx_eoa_to_eoa(tx),
+            TxType::DeployContract => self.handle_tx_deploy_contract(tx),
+            TxType::CallContract => self.handle_tx_call_contract(tx),
         }
     }
 
-    fn handle_tx_eoa_to_eoa(&mut self, tx: &Tx) -> Result<(), StateError> {
+    fn handle_tx_eoa_to_eoa(&mut self, tx: &Tx) -> Result<Option<Bytes>, StateError> {
         let from = self.get_mut_account_by_address(tx.from())?;
 
         match from.sub_balance(tx.value()) {
             Ok(_) => {
                 let to = self.get_mut_account_by_address(tx.to())?;
                 to.add_balance(tx.value());
-                Ok(())
+                Ok(None)
             }
             Err(_) => Err(StateError::NotEnoughBalance),
         }
     }
 
-    fn handle_tx_deploy_contract(&mut self, tx: &Tx) -> Result<(), StateError> {
+    fn handle_tx_deploy_contract(&mut self, tx: &Tx) -> Result<Option<Bytes>, StateError> {
         let address = self.account_add_inner("Contract", tx.data().clone());
         let mut vm = VM::new(self.accounts.get(&address).unwrap().get_code().clone());
         let mut ext = Ext::new(address, &mut self.accounts, tx);
 
         match vm.execute(&mut ext) {
             Ok(vm_result) => match vm_result {
-                VMResult::Ok | VMResult::Stop => Ok(()),
+                VMResult::Ok | VMResult::Stop => Ok(None),
                 VMResult::Return(bytes) => {
                     let account = self.get_mut_account_by_address(&address).unwrap();
                     account.set_code(bytes);
-                    Ok(())
+                    Ok(None)
                 }
             },
             Err(err) => Err(StateError::VMError(err)),
         }
     }
 
-    fn handle_tx_call_contract(&self, tx: &Tx) -> Result<(), StateError> {
-        Ok(())
+    fn handle_tx_call_contract(&mut self, tx: &Tx) -> Result<Option<Bytes>, StateError> {
+        let account = self.get_account_by_address(tx.to())?;
+        if !account.is_contract() {
+            return Err(StateError::CALLEOAACCOUNT);
+        }
+
+        let mut vm = VM::new(account.get_code().clone());
+        let mut ext = Ext::new(account.get_address().clone(), &mut self.accounts, tx);
+
+        match vm.execute(&mut ext) {
+            Ok(vm_result) => match vm_result {
+                VMResult::Ok | VMResult::Stop => Ok(None),
+                VMResult::Return(bytes) => Ok(Some(bytes)),
+            },
+            Err(err) => Err(StateError::VMError(err)),
+        }
     }
 
     fn mine(&mut self) -> Result<(), StateError> {
