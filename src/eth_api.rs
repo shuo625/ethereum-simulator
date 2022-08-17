@@ -18,5 +18,11 @@ pub trait EthApi {
     fn account_list(&self) -> Vec<AccountInfo>;
     fn account_balance(&self, address: &str) -> Result<usize, EthError>;
 
-    fn tx_send(&mut self, from: &str, to: &str, value: usize, data: &str) -> Result<(), EthError>;
+    fn tx_send(
+        &mut self,
+        from: &str,
+        to: &str,
+        value: usize,
+        data: &str,
+    ) -> Result<Option<usize>, EthError>;
 }

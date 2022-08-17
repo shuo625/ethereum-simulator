@@ -7,7 +7,7 @@ mod state;
 mod tx;
 
 use self::{
-    eth_types::{Address, Bytes, EthFrom},
+    eth_types::{Address, Bytes, EthFrom, U256},
     state::{State, StateError},
     tx::Tx,
 };
@@ -56,14 +56,23 @@ impl EthApi for EthSimulator {
         }
     }
 
-    fn tx_send(&mut self, from: &str, to: &str, value: usize, data: &str) -> Result<(), EthError> {
+    fn tx_send(
+        &mut self,
+        from: &str,
+        to: &str,
+        value: usize,
+        data: &str,
+    ) -> Result<Option<usize>, EthError> {
         match self.state.tx_send(Tx::new(
             Address::ethfrom(from),
             Address::ethfrom(to),
             value,
             Bytes::ethfrom(data),
         )) {
-            Ok(_) => Ok(()),
+            Ok(result) => match result {
+                Some(value) => Ok(Some(U256::ethfrom(value.as_slice()).as_usize())),
+                None => Ok(None),
+            },
             Err(err) => match err {
                 StateError::NotExistedAddress(address) => {
                     #[cfg(debug_assertions)]
