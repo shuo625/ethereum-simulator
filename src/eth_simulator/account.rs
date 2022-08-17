@@ -19,6 +19,7 @@ pub enum AccountType {
 pub struct Account {
     name: String,
     account_type: AccountType,
+    #[allow(dead_code)]
     private_key: Secret,
     address: Address,
     balance: usize,
@@ -87,6 +88,13 @@ impl Account {
         match self.storage.get(key) {
             Some(v) => Ok(v),
             None => Err(AccountError::NotExistedStorageKey),
+        }
+    }
+
+    pub fn is_contract(&self) -> bool {
+        match self.account_type {
+            AccountType::Contract => true,
+            AccountType::EoA => false,
         }
     }
 }
