@@ -111,11 +111,15 @@ impl<'a> REPL<'a> {
         if let Ok(file) = File::open(params_file) {
             if let Ok(tx) = serde_json::from_reader::<BufReader<File>, Tx>(BufReader::new(file)) {
                 match eth_simulator.tx_send(&tx.from, &tx.to, tx.value, &tx.data) {
-                    Ok(_) => {}
+                    Ok(result) => match result {
+                        Some(value) => println!("Result: {}", value),
+                        None => {}
+                    },
                     Err(err) => match err {
                         EthError::NotExistedAddress => println!("some address does not exist"),
                         EthError::NotEnoughBalance => println!("balance is not enough"),
                         EthError::VMError => println!("there is a vm error"),
+                        EthError::CALLEOAACCOUNT => println!("called account is not Contract"),
                     },
                 }
             } else {
