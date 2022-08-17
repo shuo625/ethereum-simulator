@@ -3,7 +3,7 @@ use super::{
     hash,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub enum TxType {
     EoaToEoa,
     CallContract,
@@ -65,5 +65,9 @@ impl Tx {
             &self.to,
             self.value.to_string(),
         ))
+    }
+
+    pub fn tx_type(&self) -> TxType {
+        self.tx_type
     }
 }
