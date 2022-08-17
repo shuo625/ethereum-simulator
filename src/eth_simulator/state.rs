@@ -52,9 +52,17 @@ impl State {
         }
     }
 
-    pub fn tx_send(&mut self, tx: Tx) -> Result<(), StateError> {
+    pub fn tx_send(&mut self, tx: Tx) -> Result<Option<Bytes>, StateError> {
         self.txs.push(tx);
-        self.mine()
+        let last_tx = self.txs.last().unwrap().clone();
+
+        match self.handle_tx(&last_tx) {
+            Ok(result) => {
+                self.mine(last_tx);
+                Ok(result)
+            }
+            Err(err) => Err(err),
+        }
     }
 
     fn account_add_inner(&mut self, name: &str, code: Code) -> Address {
@@ -137,20 +145,12 @@ impl State {
         }
     }
 
-    fn mine(&mut self) -> Result<(), StateError> {
-        let last_tx = self.txs.last().unwrap().clone();
-
-        match self.handle_tx(&last_tx) {
-            Ok(_) => {
-                let prev_block_hash = if self.blocks.len() == 0 {
-                    H256::zero()
-                } else {
-                    self.blocks.last().unwrap().get_hash()
-                };
-                self.blocks.push(Block::new(last_tx, prev_block_hash));
-                Ok(())
-            }
-            Err(err) => Err(err),
-        }
+    fn mine(&mut self, last_tx: Tx) {
+        let prev_block_hash = if self.blocks.len() == 0 {
+            H256::zero()
+        } else {
+            self.blocks.last().unwrap().get_hash()
+        };
+        self.blocks.push(Block::new(last_tx, prev_block_hash));
     }
 }
