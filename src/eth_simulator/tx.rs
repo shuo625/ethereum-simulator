@@ -4,17 +4,32 @@ use super::{
 };
 
 #[derive(Clone)]
+pub enum TxType {
+    EoaToEoa,
+    CallContract,
+    DeployContract,
+}
+
+#[derive(Clone)]
 pub struct Tx {
     from: Address,
     to: Address,
     value: usize,
     data: Bytes,
     gasprice: usize,
+    tx_type: TxType,
 }
 
 impl Tx {
     pub fn new(from: Address, to: Address, value: usize, data: Bytes) -> Self {
         Tx {
+            tx_type: if to.is_zero() {
+                TxType::DeployContract
+            } else if data.is_empty() {
+                TxType::EoaToEoa
+            } else {
+                TxType::CallContract
+            },
             from,
             to,
             value,
