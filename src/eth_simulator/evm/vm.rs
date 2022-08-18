@@ -48,6 +48,9 @@ impl VM {
 
     pub fn execute(&mut self, ext: &mut Ext) -> Result<VMResult, VMError> {
         while let Some(instruction) = self.pc.next() {
+            #[cfg(debug_print)]
+            println!("{:#?}", instruction);
+
             match instruction {
                 Instruction::STOP => return Ok(VMResult::Stop),
                 Instruction::ADD => self.stack.two_items_op(|a, b| a + b),

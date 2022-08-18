@@ -74,26 +74,28 @@ impl EthApi for EthSimulator {
                 None => Ok(None),
             },
             Err(err) => match err {
+                #[allow(unused_variables)]
                 StateError::NotExistedAddress(address) => {
-                    #[cfg(debug_assertions)]
+                    #[cfg(debug_print)]
                     println!("{} not existed", address);
 
                     Err(EthError::NotExistedAddress)
                 }
                 StateError::NotEnoughBalance => {
-                    #[cfg(debug_assertions)]
+                    #[cfg(debug_print)]
                     println!("not enough balance");
 
                     Err(EthError::NotEnoughBalance)
                 }
+                #[allow(unused_variables)]
                 StateError::VMError(vm_error) => {
-                    #[cfg(debug_assertions)]
+                    #[cfg(debug_prnt)]
                     println!("vm error: {:#?}", vm_error);
 
                     Err(EthError::VMError)
                 }
                 StateError::CallEoAAccount => {
-                    #[cfg(debug_assertions)]
+                    #[cfg(debug_print)]
                     println!("to address is not contract");
 
                     Err(EthError::CallEoAAccount)
