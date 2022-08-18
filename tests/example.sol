@@ -2,7 +2,7 @@
 pragma solidity >=0.5.0 <0.9.0;
 
 contract C {
-    function one() public pure returns (uint256) {
-        return 1;
+    function echo(uint32 x) public pure returns (uint32) {
+        return x;
     }
 }

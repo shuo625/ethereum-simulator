@@ -13,7 +13,7 @@ pub enum StateError {
     NotExistedAddress(Address),
     NotEnoughBalance,
     VMError(VMError),
-    CALLEOAACCOUNT,
+    CallEoAAccount,
 }
 
 pub struct State {
@@ -130,7 +130,7 @@ impl State {
     fn handle_tx_call_contract(&mut self, tx: &Tx) -> Result<Option<Bytes>, StateError> {
         let account = self.get_account_by_address(tx.to())?;
         if !account.is_contract() {
-            return Err(StateError::CALLEOAACCOUNT);
+            return Err(StateError::CallEoAAccount);
         }
 
         let mut vm = VM::new(account.get_code().clone());

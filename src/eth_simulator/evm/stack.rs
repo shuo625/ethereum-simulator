@@ -9,6 +9,7 @@ impl Stack {
         Stack { stack: Vec::new() }
     }
 
+    #[allow(dead_code)]
     pub fn size(&self) -> U256 {
         U256::from(self.stack.len())
     }

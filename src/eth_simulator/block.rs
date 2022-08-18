@@ -1,5 +1,6 @@
 use super::{eth_types::H256, hash, tx::Tx};
 
+#[allow(dead_code)]
 pub struct Block {
     tx: Tx,
     block_hash: H256,

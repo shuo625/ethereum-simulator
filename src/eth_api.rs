@@ -11,7 +11,7 @@ pub enum EthError {
     NotExistedAddress,
     NotEnoughBalance,
     VMError,
-    CALLEOAACCOUNT,
+    CallEoAAccount,
 }
 pub trait EthApi {
     fn account_add(&mut self, name: &str) -> String;

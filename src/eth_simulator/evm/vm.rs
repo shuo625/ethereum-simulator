@@ -291,7 +291,7 @@ impl VM {
                 Instruction::PUSH(value) => self.stack.push(value),
                 Instruction::DUP(i) => self.stack.dup_top(i),
                 Instruction::SWAP(i) => self.stack.swap_with_top(i),
-                Instruction::LOG(i) => {}
+                Instruction::LOG(_i) => {}
                 Instruction::CREAT => {}
                 Instruction::CALL => {}
                 Instruction::CALLCODE => {}

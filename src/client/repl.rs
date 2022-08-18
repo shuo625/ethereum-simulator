@@ -119,7 +119,7 @@ impl<'a> REPL<'a> {
                         EthError::NotExistedAddress => println!("some address does not exist"),
                         EthError::NotEnoughBalance => println!("balance is not enough"),
                         EthError::VMError => println!("there is a vm error"),
-                        EthError::CALLEOAACCOUNT => println!("called account is not Contract"),
+                        EthError::CallEoAAccount => println!("called account is not Contract"),
                     },
                 }
             } else {
