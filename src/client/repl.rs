@@ -110,7 +110,12 @@ impl<'a> REPL<'a> {
     fn tx_send(eth_simulator: &mut EthSimulator, params_file: String) {
         if let Ok(file) = File::open(params_file) {
             if let Ok(tx) = serde_json::from_reader::<BufReader<File>, Tx>(BufReader::new(file)) {
-                match eth_simulator.tx_send(&tx.from, &tx.to, tx.value, &tx.data) {
+                match eth_simulator.tx_send(
+                    &tx.from,
+                    &tx.to,
+                    tx.value.parse::<usize>().unwrap(),
+                    &tx.data,
+                ) {
                     Ok(result) => match result {
                         Some(value) => println!("Result: {}", value),
                         None => {}
@@ -132,10 +137,10 @@ impl<'a> REPL<'a> {
 }
 
 /// Tx struct for serde json deserialize
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct Tx {
     from: String,
     to: String,
-    value: usize,
+    value: String,
     data: String,
 }
