@@ -26,6 +26,12 @@ impl PC {
         if self.pc >= self.code.len() {
             return None;
         }
+
+        #[cfg(feature = "debug_print")]
+        let curr_pc = self.pc;
+        #[cfg(feature = "debug_print")]
+        let op = self.code[curr_pc];
+
         let instruction = match self.code[self.pc] {
             0x00 => Instruction::STOP,
             0x01 => Instruction::ADD,
@@ -113,6 +119,12 @@ impl PC {
             0xff => Instruction::SELFDESTRUCT,
             _ => Instruction::INVALID,
         };
+
+        #[cfg(feature = "debug_print")]
+        println!(
+            "Curr pc: {:x}, op: {:x}, instruction: {:?}",
+            curr_pc, op, instruction
+        );
 
         self.pc += 1;
         Some(instruction)
