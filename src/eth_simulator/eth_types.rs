@@ -101,8 +101,8 @@ impl EthFrom<&str> for Vec<u8> {
         }
 
         while idx < bytes.len() - 1 {
-            let byte_part_a = bytes[idx] - b'0';
-            let byte_part_b = bytes[idx + 1] - b'0';
+            let byte_part_a = num_op::char_to_u8(bytes[idx]);
+            let byte_part_b = num_op::char_to_u8(bytes[idx + 1]);
             v.push(num_op::u8s_to_u8(byte_part_a, byte_part_b));
             idx += 2;
         }
@@ -165,6 +165,14 @@ impl EthSign for U256 {
 pub mod num_op {
     pub fn u8s_to_u8(a: u8, b: u8) -> u8 {
         (a << 4) | b
+    }
+
+    pub fn char_to_u8(c: u8) -> u8 {
+        if c >= b'0' && c <= b'9' {
+            c - b'0'
+        } else {
+            c - b'a' + 10
+        }
     }
 }
 
