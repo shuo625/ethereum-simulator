@@ -18,10 +18,17 @@ pub struct Tx {
     data: Bytes,
     gasprice: usize,
     tx_type: TxType,
+    contract_name: String,
 }
 
 impl Tx {
-    pub fn new(from: Address, to: Address, value: usize, data: Bytes) -> Self {
+    pub fn new(
+        from: Address,
+        to: Address,
+        contract_name: String,
+        value: usize,
+        data: Bytes,
+    ) -> Self {
         Tx {
             tx_type: if to.is_zero() {
                 TxType::DeployContract
@@ -35,6 +42,7 @@ impl Tx {
             value,
             data,
             gasprice: 10,
+            contract_name,
         }
     }
 
