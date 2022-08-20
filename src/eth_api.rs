@@ -1,7 +1,5 @@
 use serde::Serialize;
 
-use std::path::Path;
-
 #[derive(Serialize)]
 pub struct AccountInfo {
     pub name: String,
@@ -33,7 +31,7 @@ pub trait EthApi {
     fn deploy_contract(
         &mut self,
         from: &str,
-        contract_file: &Path,
+        contract_file: &str,
     ) -> Result<Option<usize>, EthError>;
 
     fn call_contract(

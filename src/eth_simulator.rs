@@ -114,12 +114,13 @@ impl EthApi for EthSimulator {
     fn deploy_contract(
         &mut self,
         from: &str,
-        contract_file: &Path,
+        contract_file: &str,
     ) -> Result<Option<usize>, EthError> {
-        if let Ok(result) = solc::compile(contract_file) {
+        let file = Path::new(contract_file);
+        if let Ok(result) = solc::compile(file) {
             self.tx_send(
                 from,
-                Path::new(contract_file.file_name().unwrap())
+                Path::new(file.file_name().unwrap())
                     .file_stem()
                     .unwrap()
                     .to_str()
