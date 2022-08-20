@@ -52,6 +52,16 @@ impl State {
         }
     }
 
+    pub fn account_query_address_by_name(&self, name: &str) -> Option<Address> {
+        for (address, account) in &self.accounts {
+            if account.get_name() == name {
+                return Some(address.clone());
+            }
+        }
+
+        None
+    }
+
     pub fn tx_send(&mut self, tx: Tx) -> Result<Option<Bytes>, StateError> {
         self.txs.push(tx);
         let last_tx = self.txs.last().unwrap().clone();
