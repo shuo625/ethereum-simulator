@@ -1,5 +1,7 @@
 use serde::Serialize;
 
+use std::path::Path;
+
 #[derive(Serialize)]
 pub struct AccountInfo {
     pub name: String,
@@ -12,6 +14,8 @@ pub enum EthError {
     NotEnoughBalance,
     VMError,
     CallEoAAccount,
+    CompileError,
+    NotExistedContract,
 }
 pub trait EthApi {
     fn account_add(&mut self, name: &str) -> String;
@@ -24,5 +28,18 @@ pub trait EthApi {
         to: &str,
         value: usize,
         data: &str,
+    ) -> Result<Option<usize>, EthError>;
+
+    fn deploy_contract(
+        &mut self,
+        from: &str,
+        contract_file: &Path,
+    ) -> Result<Option<usize>, EthError>;
+
+    fn call_contract(
+        &mut self,
+        from: &str,
+        contract: &str,
+        input: &str,
     ) -> Result<Option<usize>, EthError>;
 }
