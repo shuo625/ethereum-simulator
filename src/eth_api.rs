@@ -15,10 +15,18 @@ pub enum EthError {
     CompileError,
     NotExistedContract,
 }
+
+pub enum EthResult {
+    Address(String),
+    AccountList(Vec<AccountInfo>),
+    Value(usize),
+    None,
+}
+
 pub trait EthApi {
-    fn account_add(&mut self, name: &str) -> String;
-    fn account_list(&self) -> Vec<AccountInfo>;
-    fn account_balance(&self, address: &str) -> Result<usize, EthError>;
+    fn account_add(&mut self, name: &str) -> Result<EthResult, EthError>;
+    fn account_list(&self) -> Result<EthResult, EthError>;
+    fn account_balance(&self, address: &str) -> Result<EthResult, EthError>;
 
     fn tx_send(
         &mut self,
@@ -26,18 +34,14 @@ pub trait EthApi {
         to: &str,
         value: usize,
         data: &str,
-    ) -> Result<Option<usize>, EthError>;
+    ) -> Result<EthResult, EthError>;
 
-    fn deploy_contract(
-        &mut self,
-        from: &str,
-        contract_file: &str,
-    ) -> Result<Option<usize>, EthError>;
+    fn deploy_contract(&mut self, from: &str, contract_file: &str) -> Result<EthResult, EthError>;
 
     fn call_contract(
         &mut self,
         from: &str,
         contract: &str,
         input: &str,
-    ) -> Result<Option<usize>, EthError>;
+    ) -> Result<EthResult, EthError>;
 }

@@ -14,7 +14,7 @@ use self::{
     tx::Tx,
 };
 use crate::{
-    eth_api::{AccountInfo, EthApi, EthError},
+    eth_api::{AccountInfo, EthApi, EthError, EthResult},
     utils::solc,
 };
 
@@ -31,32 +31,28 @@ impl EthSimulator {
 }
 
 impl EthApi for EthSimulator {
-    fn account_add(&mut self, name: &str) -> String {
+    fn account_add(&mut self, name: &str) -> Result<EthResult, EthError> {
         let address = self.state.account_add(name);
-        String::ethfrom(&address)
+        Ok(EthResult::Address(String::ethfrom(&address)))
     }
 
-    fn account_list(&self) -> Vec<AccountInfo> {
-        self.state
-            .account_list()
-            .iter()
-            .map(|(name, address, balance)| AccountInfo {
-                name: name.to_string(),
-                address: String::ethfrom(*address),
-                balance: *balance,
-            })
-            .collect()
+    fn account_list(&self) -> Result<EthResult, EthError> {
+        Ok(EthResult::AccountList(
+            self.state
+                .account_list()
+                .iter()
+                .map(|(name, address, balance)| AccountInfo {
+                    name: name.to_string(),
+                    address: String::ethfrom(*address),
+                    balance: *balance,
+                })
+                .collect(),
+        ))
     }
 
-    fn account_balance(&self, address: &str) -> Result<usize, EthError> {
+    fn account_balance(&self, address: &str) -> Result<EthResult, EthError> {
         match self.state.account_get_balance(&Address::ethfrom(address)) {
-            Ok(value) => Ok(value),
-            Err(StateError::NotExistedAddress(addr)) => {
-                #[cfg(debug_assertions)]
-                println!("{} not existed", addr);
-
-                Err(EthError::NotExistedAddress)
-            }
+            Ok(value) => Ok(EthResult::Value(value)),
             Err(_) => Err(EthError::NotExistedAddress),
         }
     }
@@ -67,7 +63,7 @@ impl EthApi for EthSimulator {
         to: &str,
         value: usize,
         data: &str,
-    ) -> Result<Option<usize>, EthError> {
+    ) -> Result<EthResult, EthError> {
         let tx = if to.starts_with("0x") {
             Tx::new(
                 Address::ethfrom(from),
@@ -88,13 +84,12 @@ impl EthApi for EthSimulator {
 
         match self.state.tx_send(tx) {
             Ok(result) => match result {
-                Some(value) => Ok(Some(U256::ethfrom(value.as_slice()).as_usize())),
-                None => Ok(None),
+                Some(value) => Ok(EthResult::Value(U256::ethfrom(value.as_slice()).as_usize())),
+                None => Ok(EthResult::None),
             },
             Err(err) => match err {
                 StateError::NotExistedAddress(_address) => Err(EthError::NotExistedAddress),
                 StateError::NotEnoughBalance => Err(EthError::NotEnoughBalance),
-                #[allow(unused_variables)]
                 StateError::VMError(vm_error) => {
                     #[cfg(debug_print)]
                     println!("vm error: {:#?}", vm_error);
@@ -111,11 +106,7 @@ impl EthApi for EthSimulator {
         }
     }
 
-    fn deploy_contract(
-        &mut self,
-        from: &str,
-        contract_file: &str,
-    ) -> Result<Option<usize>, EthError> {
+    fn deploy_contract(&mut self, from: &str, contract_file: &str) -> Result<EthResult, EthError> {
         let file = Path::new(contract_file);
         if let Ok(result) = solc::compile(file) {
             self.tx_send(
@@ -138,7 +129,7 @@ impl EthApi for EthSimulator {
         from: &str,
         contract: &str,
         input: &str,
-    ) -> Result<Option<usize>, EthError> {
+    ) -> Result<EthResult, EthError> {
         if let Some(to) = self.state.account_query_address_by_name(contract) {
             self.tx_send(from, String::ethfrom(&to).as_str(), 20, input)
         } else {
