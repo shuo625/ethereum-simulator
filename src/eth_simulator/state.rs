@@ -52,10 +52,10 @@ impl State {
         }
     }
 
-    pub fn account_query_address_by_name(&self, name: &str) -> Option<Address> {
+    pub fn account_query_address_by_name(&self, name: &str) -> Option<&Address> {
         for (address, account) in &self.accounts {
             if account.get_name() == name {
-                return Some(address.clone());
+                return Some(address);
             }
         }
 
