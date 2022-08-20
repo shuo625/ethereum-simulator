@@ -110,7 +110,7 @@ impl State {
     }
 
     fn handle_tx_deploy_contract(&mut self, tx: &Tx) -> Result<Option<Bytes>, StateError> {
-        let address = self.account_add_inner("Contract", tx.data().clone());
+        let address = self.account_add_inner(tx.contract_name().unwrap(), tx.data().clone());
         let mut vm = VM::new(self.accounts.get(&address).unwrap().get_code().clone());
         let mut ext = Ext::new(address, &mut self.accounts, tx);
 
