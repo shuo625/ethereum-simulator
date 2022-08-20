@@ -78,4 +78,11 @@ impl Tx {
     pub fn tx_type(&self) -> TxType {
         self.tx_type
     }
+
+    pub fn contract_name(&self) -> Option<&str> {
+        match self.tx_type {
+            TxType::DeployContract => Some(&self.contract_name),
+            _ => None,
+        }
+    }
 }
