@@ -1,3 +1,8 @@
+# frontend -> backend(contract) -> blockchain client
+#          <-         <-
+# frontend -> backend(contract) -> simulator
+#          <-         <-
+
 import socket
 import json
 
@@ -36,6 +41,6 @@ tx_send = {
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
     client.connect(('127.0.0.1', 8000))
-    client.sendall(json.dumps(account_list).encode(encoding='utf-8'))
+    client.sendall(json.dumps(add_bob).encode(encoding='utf-8'))
     result = client.recv(1024).decode(encoding='utf-8')
     print(result)
