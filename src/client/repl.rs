@@ -163,6 +163,7 @@ impl<'a> REPL<'a> {
                 }
                 EthResult::Address(address) => println!("address: {}", address),
                 EthResult::Value(value) => println!("value: {}", value),
+                EthResult::None => {}
             },
             Err(err) => match err {
                 EthError::NotExistedAddress => println!("some address does not exist"),
