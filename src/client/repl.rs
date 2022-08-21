@@ -6,7 +6,7 @@ use std::{fs::File, io::BufReader, rc::Rc, sync::Mutex};
 
 use super::Client;
 use crate::{
-    eth_api::{EthApi, EthError},
+    eth_api::{EthApi, EthError, EthResult},
     eth_simulator::EthSimulator,
 };
 
@@ -77,61 +77,103 @@ impl<'a> REPL<'a> {
             },
         );
 
+        eth_simulator_clone = eth_simulator.clone();
+        repl = repl.add(
+            "contract_deploy",
+            command! {
+                "deploy contract",
+                (from: String, contract_file: String) => |from, contract_file| {
+                    let mut eth_simulator = eth_simulator_clone.lock().unwrap();
+                    Self::contract_deploy(&mut *eth_simulator, from, contract_file);
+                    Ok(CommandStatus::Done)
+                }
+            },
+        );
+
+        eth_simulator_clone = eth_simulator.clone();
+        repl = repl.add(
+            "contract_call",
+            command! {
+                "call contract",
+                (from: String, contract: String, input: String) => |from, contract, input| {
+                    let mut eth_simulator = eth_simulator_clone.lock().unwrap();
+                    Self::contract_call(&mut *eth_simulator, from, contract, input);
+                    Ok(CommandStatus::Done)
+                }
+            },
+        );
+
         REPL {
             repl: repl.build().expect("Failed to create repl"),
         }
     }
 
     fn account_add(eth_simulator: &mut EthSimulator, name: String) {
-        eth_simulator.account_add(&name);
+        Self::handle_eth_result(eth_simulator.account_add(&name));
     }
 
     fn account_list(eth_simulator: &EthSimulator) {
-        let accounts = eth_simulator.account_list();
-
-        for account in accounts {
-            println!(
-                "name: {}, address: {}, balance: {}",
-                account.name, account.address, account.balance
-            );
-        }
+        Self::handle_eth_result(eth_simulator.account_list());
     }
 
     fn account_balance(eth_simulator: &EthSimulator, address: String) {
-        match eth_simulator.account_balance(&address) {
-            Ok(balance) => println!("balance: {}", balance),
-            Err(err) => match err {
-                EthError::NotExistedAddress => println!("This address does not exist"),
-                _ => {}
-            },
-        }
+        Self::handle_eth_result(eth_simulator.account_balance(&address));
     }
 
     fn tx_send(eth_simulator: &mut EthSimulator, params_file: String) {
         if let Ok(file) = File::open(params_file) {
             if let Ok(tx) = serde_json::from_reader::<BufReader<File>, Tx>(BufReader::new(file)) {
-                match eth_simulator.tx_send(
+                Self::handle_eth_result(eth_simulator.tx_send(
                     &tx.from,
                     &tx.to,
                     tx.value.parse::<usize>().unwrap(),
                     &tx.data,
-                ) {
-                    Ok(result) => match result {
-                        Some(value) => println!("Result: {}", value),
-                        None => {}
-                    },
-                    Err(err) => match err {
-                        EthError::NotExistedAddress => println!("some address does not exist"),
-                        EthError::NotEnoughBalance => println!("balance is not enough"),
-                        EthError::VMError => println!("there is a vm error"),
-                        EthError::CallEoAAccount => println!("called account is not Contract"),
-                    },
-                }
+                ));
             } else {
                 println!("wrong file format, failed to deserialize file")
             }
         } else {
             println!("failed to open the file, check the path of file")
+        }
+    }
+
+    fn contract_deploy(eth_simulator: &mut EthSimulator, from: String, contract_file: String) {
+        Self::handle_eth_result(eth_simulator.contract_deploy(&from, &contract_file));
+    }
+
+    fn contract_call(
+        eth_simulator: &mut EthSimulator,
+        from: String,
+        contract: String,
+        input: String,
+    ) {
+        Self::handle_eth_result(eth_simulator.contract_call(&from, &contract, &input));
+    }
+
+    fn handle_eth_result(result: Result<EthResult, EthError>) {
+        match result {
+            Ok(value) => match value {
+                EthResult::AccountList(accounts) => {
+                    for account in accounts {
+                        println!(
+                            "name: {}, address: {}, balance: {}",
+                            account.name, account.address, account.balance
+                        );
+                    }
+                }
+                EthResult::Address(address) => println!("address: {}", address),
+                EthResult::Value(value) => println!("value: {}", value),
+            },
+            Err(err) => match err {
+                EthError::NotExistedAddress => println!("some address does not exist"),
+                EthError::NotEnoughBalance => println!("balance is not enough"),
+                EthError::VMError => println!("there is a vm error"),
+                EthError::CallEoAAccount => println!("called account is not Contract"),
+                EthError::NotExistedContract => println!("called contract does not exist"),
+                EthError::CompileError => {
+                    println!("compiling contract failed, check code or path of contract")
+                }
+            },
         }
     }
 }
