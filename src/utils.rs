@@ -14,3 +14,15 @@ pub mod solc {
         Ok(String::from(lines[3]))
     }
 }
+
+pub mod path {
+    use std::path::Path;
+
+    pub fn get_file_name(file_path: &Path) -> &str {
+        Path::new(file_path.file_name().unwrap())
+            .file_stem()
+            .unwrap()
+            .to_str()
+            .unwrap()
+    }
+}
