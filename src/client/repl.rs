@@ -84,7 +84,7 @@ impl<'a> REPL<'a> {
                 "send transaction",
                 (from: String, to: String, value: String, data: String) => |from, to, value, data| {
                     let mut eth_simulator = eth_simulator_clone.lock().unwrap();
-                    Self::tx_send_file(&mut *eth_simulator, from, to, value, data);
+                    Self::tx_send(&mut *eth_simulator, from, to, value, data);
                     Ok(CommandStatus::Done)
                 }
             },
