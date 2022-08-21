@@ -90,6 +90,7 @@ impl EthApi for EthSimulator {
             Err(err) => match err {
                 StateError::NotExistedAddress(_address) => Err(EthError::NotExistedAddress),
                 StateError::NotEnoughBalance => Err(EthError::NotEnoughBalance),
+                #[allow(unused_variables)]
                 StateError::VMError(vm_error) => {
                     #[cfg(debug_print)]
                     println!("vm error: {:#?}", vm_error);
