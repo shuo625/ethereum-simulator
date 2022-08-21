@@ -106,7 +106,7 @@ impl EthApi for EthSimulator {
         }
     }
 
-    fn deploy_contract(&mut self, from: &str, contract_file: &str) -> Result<EthResult, EthError> {
+    fn contract_deploy(&mut self, from: &str, contract_file: &str) -> Result<EthResult, EthError> {
         let file = Path::new(contract_file);
         if let Ok(result) = solc::compile(file) {
             self.tx_send(
@@ -124,7 +124,7 @@ impl EthApi for EthSimulator {
         }
     }
 
-    fn call_contract(
+    fn contract_call(
         &mut self,
         from: &str,
         contract: &str,

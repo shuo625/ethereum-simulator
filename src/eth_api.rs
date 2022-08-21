@@ -36,9 +36,9 @@ pub trait EthApi {
         data: &str,
     ) -> Result<EthResult, EthError>;
 
-    fn deploy_contract(&mut self, from: &str, contract_file: &str) -> Result<EthResult, EthError>;
+    fn contract_deploy(&mut self, from: &str, contract_file: &str) -> Result<EthResult, EthError>;
 
-    fn call_contract(
+    fn contract_call(
         &mut self,
         from: &str,
         contract: &str,
