@@ -10,7 +10,6 @@ use super::super::{
 #[derive(Debug)]
 pub enum ExtError {
     NotExistedAddress(Address),
-    NotExistedStorageKey,
 }
 
 pub struct Ext<'a> {

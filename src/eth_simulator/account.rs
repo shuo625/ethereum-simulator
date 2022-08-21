@@ -8,7 +8,6 @@ use super::{
 
 pub enum AccountError {
     NotEnoughBalance,
-    NotExistedStorageKey,
 }
 
 pub enum AccountType {

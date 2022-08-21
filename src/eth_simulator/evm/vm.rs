@@ -21,7 +21,6 @@ pub enum VMResult {
 #[derive(Debug)]
 pub enum VMErrorKind {
     NotExistedAddress(Address),
-    NotExistedStorageKey,
 }
 
 #[derive(Debug)]
@@ -150,7 +149,6 @@ impl VM {
                                     error_kind: VMErrorKind::NotExistedAddress(address),
                                 })
                             }
-                            _ => {}
                         },
                     }
                 }
@@ -188,7 +186,6 @@ impl VM {
                                     error_kind: VMErrorKind::NotExistedAddress(address),
                                 })
                             }
-                            _ => {}
                         },
                     }
                 }
@@ -208,7 +205,6 @@ impl VM {
                                     error_kind: VMErrorKind::NotExistedAddress(address),
                                 })
                             }
-                            _ => {}
                         },
                     }
                 }
@@ -227,7 +223,6 @@ impl VM {
                                     error_kind: VMErrorKind::NotExistedAddress(address),
                                 })
                             }
-                            _ => {}
                         },
                     }
                 }
