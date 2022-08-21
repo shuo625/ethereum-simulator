@@ -10,7 +10,10 @@ use std::{
 };
 
 use super::Client;
-use crate::{eth_api::EthApi, eth_simulator::EthSimulator};
+use crate::{
+    eth_api::{EthApi, EthResult},
+    eth_simulator::EthSimulator,
+};
 
 #[derive(Deserialize, Debug)]
 struct Request {
@@ -103,9 +106,11 @@ impl Rpc {
         params: &HashMap<String, String>,
     ) -> Result<Value, RpcError> {
         if let Some(name) = params.get("name") {
-            Ok(json!({
-                "address": eth_simulator.account_add(name)
-            }))
+            if let Ok(EthResult::Address(address)) = eth_simulator.account_add(name) {
+                Ok(json!({ "address": address }))
+            } else {
+                Err(RpcError::WrongRequest)
+            }
         } else {
             Err(RpcError::WrongParams)
         }
@@ -115,9 +120,11 @@ impl Rpc {
         eth_simulator: &EthSimulator,
         _params: &HashMap<String, String>,
     ) -> Result<Value, RpcError> {
-        Ok(json!({
-            "accounts": eth_simulator.account_list()
-        }))
+        if let Ok(EthResult::AccountList(account_list)) = eth_simulator.account_list() {
+            Ok(json!({ "accounts": account_list }))
+        } else {
+            Err(RpcError::WrongRequest)
+        }
     }
 
     fn account_balance(
@@ -125,7 +132,7 @@ impl Rpc {
         params: &HashMap<String, String>,
     ) -> Result<Value, RpcError> {
         if let Some(address) = params.get("address") {
-            if let Ok(balance) = eth_simulator.account_balance(address) {
+            if let Ok(EthResult::Value(balance)) = eth_simulator.account_balance(address) {
                 Ok(json!({ "balance": balance }))
             } else {
                 Err(RpcError::WrongParams)
@@ -146,7 +153,10 @@ impl Rpc {
             params.get("data"),
         ) {
             match eth_simulator.tx_send(from, to, value.parse::<usize>().unwrap(), data) {
-                Ok(_) => Ok(Value::Null),
+                Ok(result) => match result {
+                    EthResult::Value(value) => Ok(Value::String(value.to_string())),
+                    _ => Ok(Value::Null),
+                },
                 Err(_) => Err(RpcError::WrongRequest),
             }
         } else {
