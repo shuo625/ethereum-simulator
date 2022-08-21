@@ -10,12 +10,12 @@ use std::path::Path;
 
 use self::{
     eth_types::{Address, Bytes, EthFrom, U256},
-    state::{State, StateError},
-    tx::Tx,
+    state::{State, StateError, TxError},
+    tx::{Tx, TxType},
 };
 use crate::{
     eth_api::{AccountInfo, EthApi, EthError, EthResult},
-    utils::solc,
+    utils::{path, solc},
 };
 
 pub struct EthSimulator {
@@ -26,6 +26,19 @@ impl EthSimulator {
     pub fn new() -> Self {
         EthSimulator {
             state: State::new(),
+        }
+    }
+
+    fn get_address(&self, addr: &str) -> Option<Address> {
+        if addr.starts_with("0x") {
+            let address = Address::ethfrom(addr);
+            if self.state.address_exist(&address) {
+                Some(address)
+            } else {
+                None
+            }
+        } else {
+            self.state.account_query_address_by_name(addr)
         }
     }
 }
@@ -51,10 +64,15 @@ impl EthApi for EthSimulator {
     }
 
     fn account_balance(&self, address: &str) -> Result<EthResult, EthError> {
-        match self.state.account_get_balance(&Address::ethfrom(address)) {
-            Ok(value) => Ok(EthResult::Value(value)),
-            Err(_) => Err(EthError::NotExistedAddress),
-        }
+        Ok(EthResult::Value(
+            self.state
+                .account_get_balance(
+                    &self
+                        .get_address(address)
+                        .ok_or(EthError::NotExistedAddress)?,
+                )
+                .unwrap(),
+        ))
     }
 
     fn tx_send(
@@ -64,62 +82,61 @@ impl EthApi for EthSimulator {
         value: usize,
         data: &str,
     ) -> Result<EthResult, EthError> {
-        let tx = if to.starts_with("0x") {
+        let from_addr = self.get_address(from).ok_or(EthError::NotExistedAddress)?;
+        let tx = if let Some(to_addr) = self.get_address(to) {
+            let tx_type = if self.state.address_is_contract(&to_addr) {
+                TxType::CallContract
+            } else {
+                TxType::EoaToEoa
+            };
+
             Tx::new(
-                Address::ethfrom(from),
-                Address::ethfrom(to),
-                String::from(""),
+                from_addr,
+                to_addr,
                 value,
                 Bytes::ethfrom(data),
+                tx_type,
+                String::new(),
             )
         } else {
             Tx::new(
-                Address::ethfrom(from),
+                from_addr,
                 Address::zero(),
-                String::from(to),
                 value,
                 Bytes::ethfrom(data),
+                TxType::DeployContract,
+                to.to_string(),
             )
         };
 
         match self.state.tx_send(tx) {
-            Ok(result) => match result {
-                Some(value) => Ok(EthResult::Value(U256::ethfrom(value.as_slice()).as_usize())),
-                None => Ok(EthResult::None),
-            },
+            Ok(result) => {
+                if result.len() > 0 {
+                    Ok(EthResult::Value(
+                        U256::ethfrom(result.as_slice()).as_usize(),
+                    ))
+                } else {
+                    Ok(EthResult::None)
+                }
+            }
             Err(err) => match err {
-                StateError::NotExistedAddress(_address) => Err(EthError::NotExistedAddress),
-                StateError::NotEnoughBalance => Err(EthError::NotEnoughBalance),
-                #[allow(unused_variables)]
-                StateError::VMError(vm_error) => {
-                    #[cfg(debug_print)]
-                    println!("vm error: {:#?}", vm_error);
-
-                    Err(EthError::VMError)
-                }
-                StateError::CallEoAAccount => {
-                    #[cfg(debug_print)]
-                    println!("to address is not contract");
-
-                    Err(EthError::CallEoAAccount)
-                }
+                StateError::TxError(tx_error) => match tx_error {
+                    TxError::WrongFromAddress(_) | TxError::WrongToAddress(_) => {
+                        Err(EthError::NotExistedAddress)
+                    }
+                    TxError::NotEnoughBalance => Err(EthError::NotEnoughBalance),
+                    TxError::CallEoAAccount => Err(EthError::CallEoAAccount),
+                },
+                StateError::VMError(_vm_error) => Err(EthError::VMError),
             },
         }
     }
 
     fn contract_deploy(&mut self, from: &str, contract_file: &str) -> Result<EthResult, EthError> {
-        let file = Path::new(contract_file);
-        if let Ok(result) = solc::compile(file) {
-            self.tx_send(
-                from,
-                Path::new(file.file_name().unwrap())
-                    .file_stem()
-                    .unwrap()
-                    .to_str()
-                    .unwrap(),
-                0,
-                &result,
-            )
+        let contract = Path::new(contract_file);
+
+        if let Ok(result) = solc::compile(contract) {
+            self.tx_send(from, path::get_file_name(contract), 0, &result)
         } else {
             Err(EthError::CompileError)
         }
@@ -131,10 +148,9 @@ impl EthApi for EthSimulator {
         contract: &str,
         input: &str,
     ) -> Result<EthResult, EthError> {
-        if let Some(to) = self.state.account_query_address_by_name(contract) {
-            self.tx_send(from, String::ethfrom(&to).as_str(), 20, input)
-        } else {
-            Err(EthError::NotExistedContract)
+        if self.get_address(contract) == None {
+            return Err(EthError::NotExistedContract);
         }
+        self.tx_send(from, contract, 20, input)
     }
 }

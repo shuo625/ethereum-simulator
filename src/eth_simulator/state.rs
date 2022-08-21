@@ -41,6 +41,10 @@ impl State {
         self.accounts.contains_key(address)
     }
 
+    pub fn address_is_contract(&self, address: &Address) -> bool {
+        self.accounts.get(address).unwrap().is_contract()
+    }
+
     pub fn account_add(&mut self, name: &str) -> Address {
         self.account_add_inner(name, Code::ethfrom(""))
     }

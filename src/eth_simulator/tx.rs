@@ -25,23 +25,18 @@ impl Tx {
     pub fn new(
         from: Address,
         to: Address,
-        contract_name: String,
         value: usize,
         data: Bytes,
+        tx_type: TxType,
+        contract_name: String,
     ) -> Self {
         Tx {
-            tx_type: if to.is_zero() {
-                TxType::DeployContract
-            } else if data.is_empty() {
-                TxType::EoaToEoa
-            } else {
-                TxType::CallContract
-            },
             from,
             to,
             value,
             data,
             gasprice: 10,
+            tx_type,
             contract_name,
         }
     }
