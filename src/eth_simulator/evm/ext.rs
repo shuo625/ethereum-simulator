@@ -39,16 +39,13 @@ impl<'a> Ext<'a> {
             .set_storage(H256::ethfrom(key), H256::ethfrom(value));
     }
 
-    pub fn get_storage(&self, key: U256) -> Result<U256, ExtError> {
-        match self
-            .accounts
-            .get(&self.account)
-            .unwrap()
-            .get_storage(&H256::ethfrom(key))
-        {
-            Ok(v) => Ok(U256::ethfrom(v)),
-            Err(_) => Err(ExtError::NotExistedStorageKey),
-        }
+    pub fn get_storage(&self, key: U256) -> U256 {
+        U256::ethfrom(
+            self.accounts
+                .get(&self.account)
+                .unwrap()
+                .get_storage(&H256::ethfrom(key)),
+        )
     }
 
     pub fn get_gas(&self) -> U256 {

@@ -84,11 +84,8 @@ impl Account {
         self.storage.set(key, value);
     }
 
-    pub fn get_storage(&self, key: &H256) -> Result<H256, AccountError> {
-        match self.storage.get(key) {
-            Some(v) => Ok(v),
-            None => Err(AccountError::NotExistedStorageKey),
-        }
+    pub fn get_storage(&self, key: &H256) -> H256 {
+        self.storage.get(key)
     }
 
     pub fn is_contract(&self) -> bool {

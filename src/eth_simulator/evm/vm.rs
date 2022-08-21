@@ -256,20 +256,7 @@ impl VM {
                 }
                 Instruction::SLOAD => {
                     let key = self.stack.pop();
-
-                    match ext.get_storage(key) {
-                        Ok(value) => self.stack.push(value),
-                        Err(err) => match err {
-                            ExtError::NotExistedStorageKey => {
-                                return Err(VMError {
-                                    instruction: Instruction::SLOAD,
-                                    pc: self.pc.pc().as_usize(),
-                                    error_kind: VMErrorKind::NotExistedStorageKey,
-                                })
-                            }
-                            _ => {}
-                        },
-                    }
+                    self.stack.push(ext.get_storage(key));
                 }
                 Instruction::SSTORE => {
                     let key = self.stack.pop();

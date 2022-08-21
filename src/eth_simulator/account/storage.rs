@@ -17,10 +17,10 @@ impl Storage {
         self.storage.insert(key, value);
     }
 
-    pub fn get(&self, key: &H256) -> Option<H256> {
+    pub fn get(&self, key: &H256) -> H256 {
         match self.storage.get(key) {
-            Some(&v) => Some(v),
-            None => None,
+            Some(&v) => v,
+            None => H256::zero(),
         }
     }
 }

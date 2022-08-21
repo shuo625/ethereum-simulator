@@ -127,7 +127,12 @@ impl EthApi for EthSimulator {
                     TxError::NotEnoughBalance => Err(EthError::NotEnoughBalance),
                     TxError::CallEoAAccount => Err(EthError::CallEoAAccount),
                 },
-                StateError::VMError(_vm_error) => Err(EthError::VMError),
+                StateError::VMError(_vm_error) => {
+                    #[cfg(feature = "debug_print")]
+                    println!("{:#?}", _vm_error);
+
+                    Err(EthError::VMError)
+                }
             },
         }
     }
