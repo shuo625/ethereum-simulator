@@ -10,10 +10,16 @@ use super::{
 
 #[derive(Debug)]
 pub enum StateError {
-    NotExistedAddress(Address),
-    NotEnoughBalance,
+    TxError(TxError),
     VMError(VMError),
+}
+
+#[derive(Debug)]
+pub enum TxError {
+    NotEnoughBalance,
     CallEoAAccount,
+    WrongFromAddress(Address),
+    WrongToAddress(Address),
 }
 
 pub struct State {
@@ -31,6 +37,10 @@ impl State {
         }
     }
 
+    pub fn address_exist(&self, address: &Address) -> bool {
+        self.accounts.contains_key(address)
+    }
+
     pub fn account_add(&mut self, name: &str) -> Address {
         self.account_add_inner(name, Code::ethfrom(""))
     }
@@ -45,11 +55,10 @@ impl State {
         account_list
     }
 
-    pub fn account_get_balance(&self, address: &Address) -> Result<usize, StateError> {
-        match self.accounts.get(address) {
-            Some(account) => Ok(account.get_balance()),
-            None => Err(StateError::NotExistedAddress(address.clone())),
-        }
+    pub fn account_get_balance(&self, address: &Address) -> Option<usize> {
+        self.accounts
+            .get(address)
+            .and_then(|account| Some(account.get_balance()))
     }
 
     pub fn account_query_address_by_name(&self, name: &str) -> Option<Address> {
@@ -62,17 +71,28 @@ impl State {
         None
     }
 
-    pub fn tx_send(&mut self, tx: Tx) -> Result<Option<Bytes>, StateError> {
+    pub fn tx_send(&mut self, tx: Tx) -> Result<Bytes, StateError> {
+        self.check_tx(&tx)
+            .or_else(|tx_error| Err(StateError::TxError(tx_error)))?;
+
         self.txs.push(tx);
         let last_tx = self.txs.last().unwrap().clone();
 
-        match self.handle_tx(&last_tx) {
-            Ok(result) => {
-                self.mine(last_tx);
-                Ok(result)
-            }
-            Err(err) => Err(err),
+        self.handle_tx(&last_tx).and_then(|result| {
+            self.mine(last_tx);
+            Ok(result)
+        })
+    }
+
+    fn check_tx(&self, tx: &Tx) -> Result<(), TxError> {
+        if !self.address_exist(tx.from()) {
+            return Err(TxError::WrongFromAddress(tx.from().clone()));
         }
+        if !self.address_exist(tx.to()) {
+            return Err(TxError::WrongToAddress(tx.to().clone()));
+        }
+
+        Ok(())
     }
 
     fn account_add_inner(&mut self, name: &str, code: Code) -> Address {
@@ -83,22 +103,8 @@ impl State {
         address
     }
 
-    fn get_account_by_address(&self, address: &Address) -> Result<&Account, StateError> {
-        self.accounts
-            .get(address)
-            .ok_or(StateError::NotExistedAddress(address.clone()))
-    }
-
-    fn get_mut_account_by_address(
-        &mut self,
-        address: &Address,
-    ) -> Result<&mut Account, StateError> {
-        self.accounts
-            .get_mut(address)
-            .ok_or(StateError::NotExistedAddress(address.clone()))
-    }
-
-    fn handle_tx(&mut self, tx: &Tx) -> Result<Option<Bytes>, StateError> {
+    /// Validity of Tx should be checked at caller side
+    fn handle_tx(&mut self, tx: &Tx) -> Result<Bytes, StateError> {
         match tx.tx_type() {
             TxType::EoaToEoa => self.handle_tx_eoa_to_eoa(tx),
             TxType::DeployContract => self.handle_tx_deploy_contract(tx),
@@ -106,41 +112,41 @@ impl State {
         }
     }
 
-    fn handle_tx_eoa_to_eoa(&mut self, tx: &Tx) -> Result<Option<Bytes>, StateError> {
-        let from = self.get_mut_account_by_address(tx.from())?;
+    fn handle_tx_eoa_to_eoa(&mut self, tx: &Tx) -> Result<Bytes, StateError> {
+        let from = self.accounts.get_mut(tx.from()).unwrap();
 
         match from.sub_balance(tx.value()) {
             Ok(_) => {
-                let to = self.get_mut_account_by_address(tx.to())?;
+                let to = self.accounts.get_mut(tx.to()).unwrap();
                 to.add_balance(tx.value());
-                Ok(None)
+                Ok(Bytes::new())
             }
-            Err(_) => Err(StateError::NotEnoughBalance),
+            Err(_) => Err(StateError::TxError(TxError::NotEnoughBalance)),
         }
     }
 
-    fn handle_tx_deploy_contract(&mut self, tx: &Tx) -> Result<Option<Bytes>, StateError> {
+    fn handle_tx_deploy_contract(&mut self, tx: &Tx) -> Result<Bytes, StateError> {
         let address = self.account_add_inner(tx.contract_name().unwrap(), tx.data().clone());
         let mut vm = VM::new(self.accounts.get(&address).unwrap().get_code().clone());
         let mut ext = Ext::new(address, &mut self.accounts, tx);
 
         match vm.execute(&mut ext) {
             Ok(vm_result) => match vm_result {
-                VMResult::Ok | VMResult::Stop => Ok(None),
+                VMResult::Ok | VMResult::Stop => Ok(Bytes::new()),
                 VMResult::Return(bytes) => {
-                    let account = self.get_mut_account_by_address(&address).unwrap();
+                    let account = self.accounts.get_mut(&address).unwrap();
                     account.set_code(bytes);
-                    Ok(None)
+                    Ok(Bytes::new())
                 }
             },
             Err(err) => Err(StateError::VMError(err)),
         }
     }
 
-    fn handle_tx_call_contract(&mut self, tx: &Tx) -> Result<Option<Bytes>, StateError> {
-        let account = self.get_account_by_address(tx.to())?;
+    fn handle_tx_call_contract(&mut self, tx: &Tx) -> Result<Bytes, StateError> {
+        let account = self.accounts.get(tx.to()).unwrap();
         if !account.is_contract() {
-            return Err(StateError::CallEoAAccount);
+            return Err(StateError::TxError(TxError::CallEoAAccount));
         }
 
         let mut vm = VM::new(account.get_code().clone());
@@ -148,8 +154,8 @@ impl State {
 
         match vm.execute(&mut ext) {
             Ok(vm_result) => match vm_result {
-                VMResult::Ok | VMResult::Stop => Ok(None),
-                VMResult::Return(bytes) => Ok(Some(bytes)),
+                VMResult::Ok | VMResult::Stop => Ok(Bytes::new()),
+                VMResult::Return(bytes) => Ok(bytes),
             },
             Err(err) => Err(StateError::VMError(err)),
         }
