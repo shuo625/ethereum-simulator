@@ -97,6 +97,8 @@ impl Rpc {
             "account_list" => Self::account_list(eth_simulator, &request.params),
             "account_balance" => Self::account_balance(eth_simulator, &request.params),
             "tx_send" => Self::tx_send(eth_simulator, &request.params),
+            "contract_deploy" => Self::contract_deploy(eth_simulator, &request.params),
+            "contract_call" => Self::contract_call(eth_simulator, &request.params),
             _ => Err(RpcError::WrongMethod),
         }
     }
@@ -153,6 +155,42 @@ impl Rpc {
             params.get("data"),
         ) {
             match eth_simulator.tx_send(from, to, value.parse::<usize>().unwrap(), data) {
+                Ok(result) => match result {
+                    EthResult::Value(value) => Ok(Value::String(value.to_string())),
+                    _ => Ok(Value::Null),
+                },
+                Err(_) => Err(RpcError::WrongRequest),
+            }
+        } else {
+            Err(RpcError::WrongParams)
+        }
+    }
+
+    fn contract_deploy(
+        eth_simulator: &mut EthSimulator,
+        params: &HashMap<String, String>,
+    ) -> Result<Value, RpcError> {
+        if let (Some(from), Some(contract_file)) = (params.get("from"), params.get("contract_file"))
+        {
+            match eth_simulator.contract_deploy(&from, &contract_file) {
+                Ok(_) => Ok(Value::Null),
+                Err(_) => Err(RpcError::WrongRequest),
+            }
+        } else {
+            Err(RpcError::WrongParams)
+        }
+    }
+
+    fn contract_call(
+        eth_simulator: &mut EthSimulator,
+        params: &HashMap<String, String>,
+    ) -> Result<Value, RpcError> {
+        if let (Some(from), Some(contract), Some(input)) = (
+            params.get("from"),
+            params.get("contract"),
+            params.get("input"),
+        ) {
+            match eth_simulator.contract_call(&from, &contract, &input) {
                 Ok(result) => match result {
                     EthResult::Value(value) => Ok(Value::String(value.to_string())),
                     _ => Ok(Value::Null),
