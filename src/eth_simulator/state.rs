@@ -92,7 +92,7 @@ impl State {
         if !self.address_exist(tx.from()) {
             return Err(TxError::WrongFromAddress(tx.from().clone()));
         }
-        if !self.address_exist(tx.to()) {
+        if tx.tx_type() != TxType::DeployContract && !self.address_exist(tx.to()) {
             return Err(TxError::WrongToAddress(tx.to().clone()));
         }
 
