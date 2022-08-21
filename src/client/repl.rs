@@ -30,7 +30,7 @@ impl<'a> REPL<'a> {
             "account_add",
             command! {
                 "add account",
-                (name: String) => |name: String| {
+                (name: String) => |name| {
                     let mut eth_simulator = eth_simulator_clone.lock().unwrap();
                     Self::account_add(&mut *eth_simulator, name);
                     Ok(CommandStatus::Done)
@@ -56,9 +56,22 @@ impl<'a> REPL<'a> {
             "account_balance",
             command! {
                 "get account balance",
-                (address: String) => |address: String| {
+                (address: String) => |address| {
                     let mut eth_simulator = eth_simulator_clone.lock().unwrap();
                     Self::account_balance(&*eth_simulator, address);
+                    Ok(CommandStatus::Done)
+                }
+            },
+        );
+
+        eth_simulator_clone = eth_simulator.clone();
+        repl = repl.add(
+            "tx_send_file",
+            command! {
+                "send transaction by params file",
+                (params_file: String) => |params_file| {
+                    let mut eth_simulator = eth_simulator_clone.lock().unwrap();
+                    Self::tx_send_file(&mut *eth_simulator, params_file);
                     Ok(CommandStatus::Done)
                 }
             },
@@ -69,9 +82,9 @@ impl<'a> REPL<'a> {
             "tx_send",
             command! {
                 "send transaction",
-                (params_file: String) => |params_file: String| {
+                (from: String, to: String, value: String, data: String) => |from, to, value, data| {
                     let mut eth_simulator = eth_simulator_clone.lock().unwrap();
-                    Self::tx_send(&mut *eth_simulator, params_file);
+                    Self::tx_send_file(&mut *eth_simulator, from, to, value, data);
                     Ok(CommandStatus::Done)
                 }
             },
@@ -120,7 +133,7 @@ impl<'a> REPL<'a> {
         Self::handle_eth_result(eth_simulator.account_balance(&address));
     }
 
-    fn tx_send(eth_simulator: &mut EthSimulator, params_file: String) {
+    fn tx_send_file(eth_simulator: &mut EthSimulator, params_file: String) {
         if let Ok(file) = File::open(params_file) {
             if let Ok(tx) = serde_json::from_reader::<BufReader<File>, Tx>(BufReader::new(file)) {
                 Self::handle_eth_result(eth_simulator.tx_send(
@@ -135,6 +148,21 @@ impl<'a> REPL<'a> {
         } else {
             println!("failed to open the file, check the path of file")
         }
+    }
+
+    fn tx_send(
+        eth_simulator: &mut EthSimulator,
+        from: String,
+        to: String,
+        value: String,
+        data: String,
+    ) {
+        Self::handle_eth_result(eth_simulator.tx_send(
+            &from,
+            &to,
+            value.parse::<usize>().unwrap(),
+            &data,
+        ));
     }
 
     fn contract_deploy(eth_simulator: &mut EthSimulator, from: String, contract_file: String) {
