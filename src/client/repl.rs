@@ -79,7 +79,7 @@ impl<'a> REPL<'a> {
 
         eth_simulator_clone = eth_simulator.clone();
         repl = repl.add(
-            "tx_send",
+            "tx_send_params",
             command! {
                 "send transaction",
                 (from: String, to: String, value: String, data: String) => |from, to, value, data| {
