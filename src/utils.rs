@@ -4,6 +4,9 @@ pub mod solc {
     const COMPILER: &'static str = "solc";
 
     pub fn compile(file: &Path) -> Result<String, Box<dyn Error>> {
+        if !file.exists() {
+            Err("file does not exist")?;
+        }
         let command = Command::new(COMPILER)
             .arg("--bin")
             .arg(file.to_str().unwrap())
