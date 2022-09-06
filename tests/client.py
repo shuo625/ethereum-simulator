@@ -33,7 +33,7 @@ call_metacoin_getbalance_bob = {
     "params": {
         "from": "bob",
         "contract": "MetaCoin",
-        "input": "f8b2cb4f000000000000000000000000e89d37315c02ae1b66b058b5f621b834c959b704"
+        "input": "f8b2cb4f000000000000000000000000276c4b805892938e2d7da4655462075f3d7809a7"
     }
 }
 
@@ -42,7 +42,7 @@ call_metacoin_getbalance_jack = {
     "params": {
         "from": "bob",
         "contract": "MetaCoin",
-        "input": "f8b2cb4f0000000000000000000000002ef081cee51cf6c4e628ec9056fcc82ff68616a2"
+        "input": "f8b2cb4f000000000000000000000000ad0a63e93190c8ea17eff0fbfc39d55293eea117"
     }
 }
 
@@ -51,7 +51,7 @@ call_metacoin_sendcoin = {
     "params": {
         "from": "bob",
         "contract": "MetaCoin",
-        "input": "68d4b9c90000000000000000000000002ef081cee51cf6c4e628ec9056fcc82ff68616a200000000000000000000000000000000000000000000000000000000000000c8"
+        "input": "68d4b9c9000000000000000000000000ad0a63e93190c8ea17eff0fbfc39d55293eea11700000000000000000000000000000000000000000000000000000000000000c8"
     }
 }
 
