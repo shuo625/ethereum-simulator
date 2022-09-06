@@ -7,12 +7,15 @@ pragma solidity ^0.8.13;
 // coin/token contracts.
 
 contract MetaCoin {
+    // A map data storage
     mapping(address => uint32) balances;
 
+    // Initialize the storage
     constructor() {
         balances[tx.origin] = 10000;
     }
 
+    // Write or Change data storage
     function sendCoin(address receiver, uint32 amount)
         public
         returns (bool sufficient)
@@ -24,6 +27,7 @@ contract MetaCoin {
         return true;
     }
 
+    // Get data back
     function getBalance(address addr) public view returns (uint32) {
         return balances[addr];
     }
